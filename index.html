@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#2d3748" />
+  <meta name="description" content="CasaClean - App de tarefas domesticas" />
+  <title>CasaClean</title>
+  <link rel="manifest" href="/CasaClean/manifest.webmanifest">
+  <link rel="stylesheet" href="/CasaClean/style.css" />
+  <link rel="apple-touch-icon" href="/CasaClean/public/icons/icon-192.png" />
+</head>
+<body>
+
+  <!-- TELA DE LOGIN -->
+  <section id="login-screen" class="screen active">
+    <div class="login-header">
+      <h1>CasaClean</h1>
+      <p>Quem esta usando?</p>
+    </div>
+
+    <div class="user-bubbles">
+      <button class="user-bubble" data-user="douglas">Douglas</button>
+      <button class="user-bubble" data-user="dayane">Dayane</button>
+      <button class="user-bubble" data-user="isadora">Isadora</button>
+      <button class="user-bubble" data-user="arthur">Arthur</button>
+      <button class="user-bubble" data-user="icaro">Icaro</button>
+    </div>
+
+    <div class="pin-panel" id="pin-panel" style="display:none;">
+      <p>Digite seu PIN</p>
+      <div class="pin-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <div class="pin-keypad">
+        <button class="pin-key" data-key="1">1</button>
+        <button class="pin-key" data-key="2">2</button>
+        <button class="pin-key" data-key="3">3</button>
+        <button class="pin-key" data-key="4">4</button>
+        <button class="pin-key" data-key="5">5</button>
+        <button class="pin-key" data-key="6">6</button>
+        <button class="pin-key" data-key="7">7</button>
+        <button class="pin-key" data-key="8">8</button>
+        <button class="pin-key" data-key="9">9</button>
+        <button class="pin-key pin-clear" data-key="clear">Limpar</button>
+        <button class="pin-key" data-key="0">0</button>
+        <button class="pin-key pin-confirm" data-key="confirm">OK</button>
+      </div>
+      <button class="btn-back" id="back-from-pin">Voltar</button>
+    </div>
+
+    <div class="login-footer">
+      <p>Nao consegue lembrar o PIN? Fale com Douglas ou Dayane.</p>
+    </div>
+  </section>
+
+  <!-- TELA DE DASHBOARD -->
+  <section id="dashboard-screen" class="screen">
+    <header class="app-header">
+      <div class="header-left">
+        <span class="user-greeting" id="user-greeting">Ola, </span>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn" id="theme-toggle" title="Alternar tema">&#9788;</button>
+        <button class="icon-btn" id="logout-btn" title="Sair">&#128230;</button>
+      </div>
+    </header>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-view="dashboard">Hoje</button>
+      <button class="nav-btn" data-view="historico">Historico</button>
+      <button class="nav-btn" data-view="medalhas">Medalhas</button>
+      <button class="nav-btn" data-view="config">Config</button>
+    </nav>
+
+    <main class="main-content">
+
+      <!-- VIEW: DASHBOARD DO DIA -->
+      <div id="view-dashboard" class="view active">
+        <div class="day-header">
+          <h2 id="current-day">Segunda-feira, 4 de Maio</h2>
+          <span class="status-badge" id="reset-indicator">Hoje</span>
+        </div>
+
+        <!-- Filtro por usuario -->
+        <div class="user-filter">
+          <button class="filter-chip active" data-filter="todos">Todos</button>
+          <button class="filter-chip" data-filter="pendente">Pendentes</button>
+          <button class="filter-chip" data-filter="concluido">Concluidos</button>
+        </div>
+
+        <!-- Lista de tarefas -->
+        <div id="task-list" class="task-list">
+          <!-- Tarefas renderizadas via JS -->
+        </div>
+
+        <!-- Botao para admin adicionar tarefa extra -->
+        <button id="add-task-btn" class="btn-add-task" style="display:none;">+ Adicionar tarefa extra</button>
+      </div>
+
+      <!-- VIEW: HISTORICO -->
+      <div id="view-historico" class="view">
+        <h2>Historico de Execucoess</h2>
+
+        <div class="user-filter">
+          <button class="filter-chip active" data-filter="todos">Todos</button>
+          <button class="filter-chip" data-filter="douglas">Douglas</button>
+          <button class="filter-chip" data-filter="dayane">Dayane</button>
+          <button class="filter-chip" data-filter="isadora">Isadora</button>
+          <button class="filter-chip" data-filter="arthur">Arthur</button>
+          <button class="filter-chip" data-filter="icaro">Icaro</button>
+        </div>
+
+        <div id="history-list" class="history-list">
+          <!-- Historico renderizado via JS -->
+        </div>
+      </div>
+
+      <!-- VIEW: MEDALHAS -->
+      <div id="view-medalhas" class="view">
+        <h2>Medalhas</h2>
+
+        <div class="user-filter">
+          <button class="filter-chip active" data-filter="douglas">Douglas</button>
+          <button class="filter-chip" data-filter="dayane">Dayane</button>
+          <button class="filter-chip" data-filter="isadora">Isadora</button>
+          <button class="filter-chip" data-filter="arthur">Arthur</button>
+          <button class="filter-chip" data-filter="icaro">Icaro</button>
+        </div>
+
+        <div id="medals-list" class="medals-list">
+          <!-- Medalhas renderizadas via JS -->
+        </div>
+      </div>
+
+      <!-- VIEW: CONFIG (Admin) -->
+      <div id="view-config" class="view">
+        <h2>Configuracoes</h2>
+
+        <!-- Alterar PIN -->
+        <div class="config-section" id="admin-pin-section" style="display:none;">
+          <h3>Alterar PIN de usuario</h3>
+          <form id="change-pin-form">
+            <div class="form-row">
+              <label>Usuario</label>
+              <select id="pin-user-select">
+                <option value="douglas">Douglas</option>
+                <option value="dayane">Dayane</option>
+                <option value="isadora">Isadora</option>
+                <option value="arthur">Arthur</option>
+                <option value="icaro">Icaro</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Novo PIN (4 digitos)</label>
+              <input type="tel" id="new-pin" maxlength="4" placeholder="1234" pattern="[0-9]{4}" />
+            </div>
+            <button type="submit" class="btn-primary">Salvar novo PIN</button>
+          </form>
+        </div>
+
+        <p id="not-admin-msg" style="display:none;">Voce nao tem permissoes de administrador.</p>
+      </div>
+
+    </main>
+  </section>
+
+  <!-- MODAL: ADICIONAR TAREFA EXTRA -->
+  <div id="add-task-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h3>Adicionar tarefa extra</h3>
+      <form id="add-task-form">
+        <div class="form-row">
+          <label>Nome da tarefa</label>
+          <input type="text" id="extra-task-name" placeholder="Ex: Limpar armario" required />
+        </div>
+        <div class="form-row">
+          <label>Responsavel</label>
+          <select id="extra-task-user">
+            <option value="douglas">Douglas</option>
+            <option value="dayane">Dayane</option>
+            <option value="isadora">Isadora</option>
+            <option value="arthur">Arthur</option>
+            <option value="icaro">Icaro</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Horario sugerido</label>
+          <input type="time" id="extra-task-time" value="18:00" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="cancel-add-task">Cancelar</button>
+          <button type="submit" class="btn-primary">Adicionar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: FOTO -->
+  <div id="photo-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h3>Tire uma foto</h3>
+      <p>Foto obrigatoria para concluir a tarefa.</p>
+      <div class="photo-preview" id="photo-preview"></div>
+      <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none;" />
+      <button class="btn-primary" id="take-photo-btn">Tirar/Selecionar foto</button>
+      <div class="modal-actions" style="margin-top:var(--space-4);">
+        <button type="button" class="btn-cancel" id="cancel-photo">Cancelar</button>
+        <button type="button" class="btn-primary" id="confirm-photo">Concluir com foto</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/CasaClean/data.js"></script>
+  <script src="/CasaClean/storage.js"></script>
+  <script src="/CasaClean/app.js"></script>
+</body>
+</html>
