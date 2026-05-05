@@ -1,95 +1,104 @@
-# CasaClean
+# 🏠 CasaClean
 
-> App de tarefas domésticas com escala semanal, PIN por usuário, medalhas e PWA
+> App de gestão de tarefas domésticas — mobile-first, PWA, sem dependências.
 
-## Sobre
+[![Deploy](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel)](https://vercel.com)
+[![GitHub](https://img.shields.io/badge/Repo-GitHub-181717?logo=github)](https://github.com/Maralmhz/CasaClean)
 
-O **CasaClean** é um aplicativo web responsivo para gestão de tarefas domésticas. Nele, cada membro da família vê suas tarefas do dia, marca como concluído com foto obrigatória e acompanha seu desempenho por meio de medalhas. Todos veem o dashboard geral, mas cada usuário só pode concluir as próprias tarefas — isso ajuda na cobrança saudável entre todos.
+---
 
-## Funcionalidades
+## ✨ Features
 
-- **Login por PIN** – Cada usuário seleciona seu nome e digita um PIN de 4 dígitos para acessar.
-- **Dashboard do dia** – Mostra todas as tarefas do dia, status (pendente/concluído), responsável e horário sugerido.
-- **Checklist com foto obrigatória** – Não é possível concluir tarefa sem anexar foto como comprovação.
-- **Todos veem tudo, cada um só mexe no seu** – Transparência total, responsabilidade individual.
-- **Tarefas extras** – Douglas e Dayane (admins) podem adicionar tarefas extras no dia.
-- **Reset diário automático** – A cada novo dia, o checklist é recriado com base na escala semanal fixa.
-- **Histórico** – Registro de todas as tarefas concluídas, com data, responsável e foto.
-- **Notificações** – Alertas de tarefas pendentes em horários estratégicos (manhã, tarde, noite).
-- **Sistema de medalhas** – Conquistas por desempenho (dia perfeito, semana completa, horário certo, etc.).
-- **PWA** – Instalável no celular, funciona offline e dispara notificações push.
-- **Escuro/Claro** – Tema visual adaptável.
+- 📅 **Escala semanal fixa** — tarefas geradas automaticamente por dia da semana
+- ✅ **Checklist diário** — cada tarefa tem responsável, horário e status
+- 📷 **Foto obrigatória** — não é possível concluir sem comprovante
+- 📋 **Histórico completo** — tudo registrado com data, hora e foto
+- 🏆 **Ranking & Medalhas** — gamificação para engajamento
+- ➕ **Adicionar tarefas** — na escala semanal ou só no dia de hoje
+- 🔔 **Notificações** — lembretes em horários fixos
+- 📱 **PWA** — instalável no celular, funciona offline
+- 🔒 **PIN por usuário** — cada morador tem acesso individual
 
-## Usuários
+---
 
-| Nome | Papel | PIN |
-|------|-------|-----|
-| Douglas | Admin | 1234 |
-| Dayane | Admin | 7890 |
-| Isadora | Usuário | 5678 |
-| Arthur | Usuário | 9012 |
-| Ícaro | Usuário | 3456 |
+## 👥 Usuários
 
-> **Obs:** Douglas e Dayane são os únicos que podem alterar o PIN de qualquer usuário em caso de esquecimento.
+| Nome     | PIN  | Papel  | Obs                     |
+|----------|------|--------|-------------------------|
+| Douglas  | 1234 | Admin  | Vê e edita tudo         |
+| Isadora  | 2345 | Morador| —                       |
+| Arthur   | 3456 | Morador| —                       |
+| Ícaro    | 4567 | Morador| —                       |
+| Dayane   | 5678 | Jantar | Apenas tarefa de jantar |
 
-## Tarefas fixas
+> ⚠️ Altere os PINs em `data.js` antes de publicar.
 
-- Louça (inclui fogão + mesa + organização)
-- Varrer casa
-- Lixo manhã
-- Lixo noite
-- Banheiro
-- Quintal (sábado)
-- Colocar lixo pra fora (terça, quinta, sábado)
+---
 
-## Estrutura de arquivos
+## 📋 Tarefas fixas na escala
+
+- 🍽️ Louça (fogão + mesa + organização)
+- 🧹 Varrer casa
+- 🌅 Lixo manhã
+- 🌙 Lixo noite
+- 🚿 Banheiro
+- 🌿 Quintal (sábado)
+- 🗑️ Colocar lixo pra fora (terça, quinta, sábado)
+- 🍲 Jantar (Dayane — todos os dias)
+
+---
+
+## 🗂️ Estrutura
 
 ```
 CasaClean/
-├── index.html          # Estrutura principal + telas
-├── style.css           # Estilos mobile-first (dark/light)
-├── data.js             # Escala semanal, usuários, tarefas fixas
-├── storage.js          # Persistência (localStorage + Supabase-ready)
-├── app.js              # Lógica principal (PIN, dashboard, checklist, histórico, medalhas)
-├── manifest.webmanifest # PWA manifest
-├── sw.js               # Service Worker para cache e offline
-├── README.md           # Este arquivo
-└── public/
-    └── icons/          # Ícones do PWA
+├── index.html          # UI completa (login, dashboard, histórico, medalhas, config)
+├── style.css           # Design system dark, mobile-first
+├── app.js              # Lógica principal
+├── data.js             # Usuários, escala semanal, ícones, medalhas
+├── storage.js          # Persistência localStorage + Supabase-ready
+├── sw.js               # Service Worker (PWA/offline)
+└── manifest.webmanifest
 ```
 
-## Estrutura de telas
+---
 
-- **Login (PIN)** – Bolinhas com nomes dos usuários + teclado numérico de 4 dígitos.
-- **/ (Dashboard)** – Tarefas do dia, status, responsável, foto, botão concluir.
-- **/historico** – Histórico de todas as execuções, com filtros por usuário.
-- **/medalhas** – Medalhas conquistadas por cada usuário.
-- **/config** – Configurações (admin): alterar PINs, adicionar tarefas extras.
+## 🚀 Deploy
 
-## Stack
+### Vercel (recomendado)
 
-- **Frontend:** HTML5, CSS3, JavaScript puro (sem frameworks)
-- **Persistência (Fase 1):** localStorage
-- **Persistência (Fase 2):** Supabase (PostgreSQL + Storage)
-- **Deploy:** GitHub Pages → Vercel
-- **PWA:** Service Worker + manifest.webmanifest
+1. Importe este repositório no [Vercel](https://vercel.com/new)
+2. Framework: **Other** (site estático)
+3. Build command: *(deixe vazio)*
+4. Output dir: *(deixe vazio ou `.`)*
+5. Clique em **Deploy**
 
-## Roadmap
-
-- [x] Estrutura inicial do repositório
-- [x] README com documentação
-- [ ] Tela de login por PIN com bolinhas
-- [ ] Dashboard do dia com checklist
-- [ ] Upload de foto obrigatório para conclusão
-- [ ] Histórico de execuções
-- [ ] Sistema de medalhas
-- [ ] Notificações de tarefas pendentes
-- [ ] Integração com Supabase (backend real)
-- [ ] Deploy na Vercel
-
-## Licença
-
-MIT
+Pronto — qualquer `git push` na `main` faz deploy automático.
 
 ---
-Desenvolvido por Maralmhz
+
+## 🗄️ Próxima fase: Supabase
+
+Tabelas previstas:
+
+```sql
+profiles          -- usuários da casa
+weekly_schedule   -- escala semanal no banco
+task_runs         -- execuções diárias
+notifications_log -- log de notificações
+```
+
+Bucket: `task-proofs/{date}/{id}.jpg`
+
+---
+
+## 🛠️ Desenvolvimento local
+
+```bash
+# Qualquer servidor estático funciona
+npx serve .
+# ou
+python3 -m http.server 3000
+```
+
+Abra `http://localhost:3000`

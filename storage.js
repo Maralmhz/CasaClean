@@ -1,12 +1,13 @@
-// ─── KEYS ─────────────────────────────────────────────────────────────────────
+// ─── KEYS ───
+
 const STORAGE_KEYS = {
-  tasks:      'casaclean_tasks',
-  history:    'casaclean_history',
-  schedule:   'casaclean_schedule',
-  lastReset:  'casaclean_last_reset',
+  tasks:    'casaclean_tasks',
+  history:  'casaclean_history',
+  schedule: 'casaclean_schedule',
 };
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
+// ─── HELPERS ───
+
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -22,7 +23,8 @@ function saveJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-// ─── CUSTOM SCHEDULE PERSISTENCE ─────────────────────────────────────────────
+// ─── CUSTOM SCHEDULE ───
+
 function getCustomSchedule() {
   return loadJSON(STORAGE_KEYS.schedule, {});
 }
@@ -34,7 +36,8 @@ function addToCustomSchedule({ weekday, task, user, time }) {
   saveJSON(STORAGE_KEYS.schedule, s);
 }
 
-// ─── DAILY TASKS ──────────────────────────────────────────────────────────────
+// ─── DAILY TASKS ───
+
 function getDailyTasks(dateISO = todayISO()) {
   const stored = loadJSON(STORAGE_KEYS.tasks, {});
   return stored[dateISO] || null;
@@ -51,20 +54,20 @@ function initDailyTasks(date = new Date()) {
   const existing = getDailyTasks(dateISO);
   if (existing) return existing;
 
-  const base    = getTasksForDay(date);
-  const custom  = getCustomSchedule();
   const weekday = getWeekdayName(date);
-  const extra   = custom[weekday] || [];
+  const base    = (WEEKLY_SCHEDULE[weekday] || []).map(t => ({ ...t, custom: false }));
+  const extras  = (getCustomSchedule()[weekday] || []);
+  const all     = [...base, ...extras];
 
-  const tasks = [...base, ...extra].map((t, i) => ({
-    id:          `${dateISO}-${i}-${t.task.toLowerCase().replace(/\s/g,'-')}`,
+  const tasks = all.map((t, i) => ({
+    id:          `${dateISO}-${i}-${t.task.toLowerCase().replace(/\s+/g, '-')}`,
     task:        t.task,
     user:        t.user,
     time:        t.time || '18:00',
     status:      'pending',
     proofUrl:    null,
     completedAt: null,
-    custom:      t.custom || false,
+    custom:      !!t.custom,
   }));
 
   saveDailyTasks(tasks, dateISO);
@@ -74,14 +77,11 @@ function initDailyTasks(date = new Date()) {
 function completeTask(taskId, proofUrl, dateISO = todayISO()) {
   const tasks = getDailyTasks(dateISO);
   if (!tasks) return false;
-
   const task = tasks.find(t => t.id === taskId);
   if (!task) return false;
-
   task.status      = 'done';
   task.proofUrl    = proofUrl;
   task.completedAt = new Date().toISOString();
-
   saveDailyTasks(tasks, dateISO);
   addToHistory(task, dateISO);
   return true;
@@ -89,14 +89,15 @@ function completeTask(taskId, proofUrl, dateISO = todayISO()) {
 
 function addExtraTaskToday({ task, user, time }) {
   const dateISO = todayISO();
-  const tasks   = getDailyTasks(dateISO) || [];
+  const tasks   = getDailyTasks(dateISO) || initDailyTasks();
   const id      = `${dateISO}-extra-${Date.now()}`;
   tasks.push({ id, task, user, time: time || '18:00', status: 'pending', proofUrl: null, completedAt: null, custom: true });
   saveDailyTasks(tasks, dateISO);
   return id;
 }
 
-// ─── HISTORY ──────────────────────────────────────────────────────────────────
+// ─── HISTORY ───
+
 function addToHistory(task, dateISO) {
   const history = loadJSON(STORAGE_KEYS.history, []);
   history.push({ ...task, date: dateISO });
@@ -107,29 +108,25 @@ function getHistory() {
   return loadJSON(STORAGE_KEYS.history, []);
 }
 
-// ─── STATS FOR MEDALS ────────────────────────────────────────────────────────
+// ─── STATS ───
+
 function getUserStats(userId) {
-  const history = getHistory();
-  const mine    = history.filter(h => h.user === userId);
-  const total   = mine.length;
-  const photos  = mine.filter(h => h.proofUrl).length;
-  return { total, photos };
+  const mine   = getHistory().filter(h => h.user === userId);
+  return { total: mine.length, photos: mine.filter(h => h.proofUrl).length };
 }
 
 function getLeaderboard() {
-  const history = getHistory();
-  const counts  = {};
-  for (const h of history) {
-    counts[h.user] = (counts[h.user] || 0) + 1;
-  }
+  const counts = {};
+  for (const h of getHistory()) counts[h.user] = (counts[h.user] || 0) + 1;
   return USERS
     .filter(u => !u.onlyDinner)
     .map(u => ({ ...u, count: counts[u.id] || 0 }))
     .sort((a, b) => b.count - a.count);
 }
 
-// ─── DEBUG ───────────────────────────────────────────────────────────────────
-function clearTodayData() {
+// ─── DEBUG ───
+
+function clearTodayData_storage() {
   const stored = loadJSON(STORAGE_KEYS.tasks, {});
   delete stored[todayISO()];
   saveJSON(STORAGE_KEYS.tasks, stored);

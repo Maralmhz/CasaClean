@@ -1,11 +1,14 @@
-// ─── STATE ────────────────────────────────────────────────────────────────────
-let currentUser  = null;
-let pinTarget    = null;
-let pinBuffer    = '';
-let filterMode   = 'all'; // 'all' | 'mine'
-let currentScreen = 'home';
+// ─── STATE ───
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+let currentUser   = null;
+let pinTarget     = null;
+let pinBuffer     = '';
+let filterMode    = 'all';
+let currentScreen = 'home';
+let pendingPhotos = {};
+
+// ─── INIT ───
+
 document.addEventListener('DOMContentLoaded', () => {
   buildUserGrid();
   bindNavigation();
@@ -19,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// ─── USER GRID ────────────────────────────────────────────────────────────────
+// ─── USER GRID ───
+
 function buildUserGrid() {
   const grid = document.getElementById('userGrid');
   grid.innerHTML = '';
@@ -36,7 +40,8 @@ function buildUserGrid() {
   });
 }
 
-// ─── PIN MODAL ────────────────────────────────────────────────────────────────
+// ─── PIN MODAL ───
+
 function openPinModal(user) {
   pinTarget = user;
   pinBuffer = '';
@@ -54,8 +59,7 @@ function closePinModal() {
 
 function updatePinDots() {
   for (let i = 0; i < 4; i++) {
-    const dot = document.getElementById(`pd${i}`);
-    dot.classList.toggle('filled', i < pinBuffer.length);
+    document.getElementById(`pd${i}`).classList.toggle('filled', i < pinBuffer.length);
   }
 }
 
@@ -83,15 +87,11 @@ function validatePin() {
     document.getElementById('pinError').textContent = 'PIN incorreto. Tente novamente.';
     pinBuffer = '';
     updatePinDots();
-    // shake animation
-    const sheet = document.querySelector('.modal-sheet');
-    sheet.style.animation = 'none';
-    sheet.offsetHeight;
-    sheet.style.animation = '';
   }
 }
 
-// ─── APP ENTRY ────────────────────────────────────────────────────────────────
+// ─── APP ENTRY ───
+
 function enterApp() {
   updateUserBadges();
   navigateTo('home');
@@ -101,31 +101,30 @@ function enterApp() {
 
 function logout() {
   currentUser = null;
+  filterMode = 'all';
   showScreen('screen-login');
   showToast('Sessão encerrada', 'info');
 }
 
 function updateUserBadges() {
   if (!currentUser) return;
-  const ids = ['currentUser', 'histUser', 'medUser', 'cfgUser'];
-  ids.forEach(prefix => {
+  ['currentUser','histUser','medUser','cfgUser'].forEach(prefix => {
     const av   = document.getElementById(`${prefix}Av`);
     const name = document.getElementById(`${prefix}Name`);
     const pill = document.getElementById(`${prefix}Pill`);
     if (av)   { av.textContent = currentUser.emoji; av.style.background = currentUser.color + '22'; }
     if (name) name.textContent = currentUser.name;
-    if (pill && currentUser.role === 'admin') {
-      if (!pill.querySelector('.admin-badge')) {
-        const b = document.createElement('span');
-        b.className = 'admin-badge';
-        b.textContent = 'admin';
-        pill.appendChild(b);
-      }
+    if (pill && currentUser.role === 'admin' && !pill.querySelector('.admin-badge')) {
+      const b = document.createElement('span');
+      b.className = 'admin-badge';
+      b.textContent = 'admin';
+      pill.appendChild(b);
     }
   });
 }
 
-// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+// ─── NAVIGATION ───
+
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -146,42 +145,37 @@ function bindNavigation() {
   });
 }
 
-// ─── DASHBOARD ────────────────────────────────────────────────────────────────
-function renderDashboard() {
-  const date      = new Date();
-  const dateISO   = date.toISOString().slice(0, 10);
-  const weekday   = getWeekdayName(date);
-  const tasks     = initDailyTasks(date);
+// ─── DASHBOARD ───
 
-  // Date badge
-  const dateOpts  = { weekday: 'long', day: 'numeric', month: 'long' };
+function renderDashboard() {
+  const date    = new Date();
+  const dateISO = date.toISOString().slice(0, 10);
+  const weekday = getWeekdayName(date);
+  const tasks   = initDailyTasks(date);
+
+  const dateOpts = { weekday: 'long', day: 'numeric', month: 'long' };
   document.getElementById('dateLabel').textContent    = date.toLocaleDateString('pt-BR', dateOpts);
   document.getElementById('dateSubLabel').textContent = `${weekday.charAt(0).toUpperCase() + weekday.slice(1)} · ${tasks.length} tarefas`;
   document.getElementById('dateEmoji').textContent    = getDayEmoji(date.getDay());
 
-  // Summary
   const done    = tasks.filter(t => t.status === 'done').length;
   const pending = tasks.length - done;
   document.getElementById('sumTotal').textContent   = tasks.length;
   document.getElementById('sumDone').textContent    = done;
   document.getElementById('sumPending').textContent = pending;
-  document.getElementById('progressFill').style.width = tasks.length ? `${(done/tasks.length)*100}%` : '0%';
+  document.getElementById('progressFill').style.width = tasks.length ? `${Math.round((done/tasks.length)*100)}%` : '0%';
 
-  // Subtitle
   const myTasks = tasks.filter(t => t.user === currentUser?.id);
   document.getElementById('taskSubtitle').textContent =
     currentUser ? `${myTasks.length} suas · ${done} concluídas hoje` : 'Selecione um usuário';
-
-  // Filter button
   document.getElementById('filterBtn').textContent = filterMode === 'mine' ? 'Minhas' : 'Todas';
 
-  // Render tasks
-  const list = document.getElementById('tasksList');
+  const list   = document.getElementById('tasksList');
   list.innerHTML = '';
   const toShow = filterMode === 'mine' ? tasks.filter(t => t.user === currentUser?.id) : tasks;
 
   if (!toShow.length) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">Nenhuma tarefa</div><div class="empty-desc">Sem tarefas para exibir hoje</div></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">Tudo certo!</div><div class="empty-desc">Sem tarefas para exibir</div></div>`;
     return;
   }
 
@@ -194,14 +188,13 @@ function renderDashboard() {
     const item = document.createElement('div');
     item.className = `task-item${isDone ? ' done' : ''}`;
     item.id = `task-${task.id}`;
-
     item.innerHTML = `
       <div class="task-top">
         <div class="task-icon">${icon}</div>
         <div class="task-info">
           <div class="task-name">${task.task}</div>
           <div class="task-meta">
-            <span style="color:${user?.color}">${user?.emoji} ${user?.name}</span>
+            <span style="color:${user?.color || '#aaa'}">${user?.emoji || '👤'} ${user?.name || task.user}</span>
             <span>·</span>
             <span>⏰ ${task.time}</span>
             ${task.custom ? '<span class="chip purple" style="font-size:0.6rem;padding:1px 6px">extra</span>' : ''}
@@ -210,21 +203,23 @@ function renderDashboard() {
         <span class="task-status ${isDone ? 'done' : 'pending'}">${isDone ? '✓ Feito' : 'Pendente'}</span>
       </div>
       ${!isDone && isOwn ? `
-      <div class="task-bottom">
-        <label class="upload-zone" for="photo-${task.id}">
-          <span class="upload-icon">📷</span>
-          <span class="upload-text">Tirar/escolher foto (obrigatório)</span>
-          <input type="file" id="photo-${task.id}" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoSelect(event,'${task.id}','${dateISO}')">
-        </label>
-        <button class="btn btn-success btn-sm" id="btn-${task.id}" onclick="handleComplete('${task.id}','${dateISO}')" disabled>Concluir</button>
-      </div>
-      <div id="preview-${task.id}"></div>
+        <div class="task-bottom">
+          <label class="upload-zone" for="photo-${task.id}" style="cursor:pointer">
+            <span class="upload-icon">📷</span>
+            <span class="upload-text">Foto obrigatória para concluir</span>
+            <input type="file" id="photo-${task.id}" accept="image/*" capture="environment" style="display:none"
+              onchange="handlePhotoSelect(event,'${task.id}','${dateISO}')"/>
+          </label>
+          <button class="btn btn-success btn-sm" id="btn-${task.id}"
+            onclick="handleComplete('${task.id}','${dateISO}')" disabled>Concluir</button>
+        </div>
+        <div id="preview-${task.id}"></div>
       ` : ''}
       ${isDone && task.proofUrl ? `
-      <div style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) 0">
-        <img src="${task.proofUrl}" class="proof-thumb" alt="Comprovante">
-        <span style="font-size:0.75rem;color:var(--text3)">Concluído às ${new Date(task.completedAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>
-      </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
+          <img src="${task.proofUrl}" class="proof-thumb" alt="Comprovante">
+          <span style="font-size:0.75rem;color:var(--text3)">✅ Concluído às ${new Date(task.completedAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>
+        </div>
       ` : ''}
     `;
     list.appendChild(item);
@@ -240,8 +235,7 @@ function toggleFilter() {
   renderDashboard();
 }
 
-// ─── PHOTO / COMPLETE ────────────────────────────────────────────────────────
-let pendingPhotos = {};
+// ─── PHOTO & COMPLETE ───
 
 function handlePhotoSelect(event, taskId, dateISO) {
   const file = event.target.files[0];
@@ -251,7 +245,7 @@ function handlePhotoSelect(event, taskId, dateISO) {
     pendingPhotos[taskId] = e.target.result;
     const preview = document.getElementById(`preview-${taskId}`);
     if (preview) {
-      preview.innerHTML = `<img src="${e.target.result}" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;margin-top:8px;border:1px solid var(--border)">Foto selecionada ✓`;
+      preview.innerHTML = `<img src="${e.target.result}" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;margin-top:8px;border:1px solid var(--border)">`;
       preview.style.cssText = 'font-size:0.75rem;color:var(--green);display:flex;flex-direction:column;gap:4px';
     }
     const btn = document.getElementById(`btn-${taskId}`);
@@ -263,7 +257,6 @@ function handlePhotoSelect(event, taskId, dateISO) {
 function handleComplete(taskId, dateISO) {
   const proof = pendingPhotos[taskId];
   if (!proof) { showToast('Selecione uma foto antes de concluir!', 'error'); return; }
-
   const ok = completeTask(taskId, proof, dateISO);
   if (ok) {
     delete pendingPhotos[taskId];
@@ -274,40 +267,38 @@ function handleComplete(taskId, dateISO) {
   }
 }
 
-// ─── HISTORY ─────────────────────────────────────────────────────────────────
+// ─── HISTORY ───
+
 function renderHistory() {
   const list    = document.getElementById('historyList');
-  const history = getHistory().reverse();
+  const history = getHistory().slice().reverse();
 
   if (!history.length) {
     list.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Sem histórico</div><div class="empty-desc">Conclua tarefas para aparecerem aqui</div></div>`;
     return;
   }
 
-  // Group by date
   const groups = {};
-  history.forEach(h => {
-    if (!groups[h.date]) groups[h.date] = [];
-    groups[h.date].push(h);
-  });
-
+  history.forEach(h => { (groups[h.date] = groups[h.date] || []).push(h); });
   list.innerHTML = '';
+
   Object.entries(groups).forEach(([date, items]) => {
     const dateFormatted = new Date(date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
     const group = document.createElement('div');
     group.className = 'history-group';
     group.innerHTML = `<div class="history-date">${dateFormatted}</div>`;
-
     items.forEach(h => {
       const user = getUserById(h.user);
-      const time = h.completedAt ? new Date(h.completedAt).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) : '--';
+      const time = h.completedAt ? new Date(h.completedAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '--';
       const hi = document.createElement('div');
       hi.className = 'history-item';
       hi.innerHTML = `
-        ${h.proofUrl ? `<img src="${h.proofUrl}" class="hi-thumb" alt="foto">` : `<div class="hi-thumb" style="background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px">${getTaskIcon(h.task)}</div>`}
+        ${h.proofUrl
+          ? `<img src="${h.proofUrl}" class="hi-thumb" alt="foto">`
+          : `<div class="hi-thumb" style="background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px">${getTaskIcon(h.task)}</div>`}
         <div class="hi-info">
           <div class="hi-name">${h.task}</div>
-          <div class="hi-meta">${user?.emoji} ${user?.name} · ${time}</div>
+          <div class="hi-meta">${user?.emoji || '👤'} ${user?.name || h.user} · ${time}</div>
         </div>
         <span class="hi-badge">✓ Feito</span>
       `;
@@ -317,7 +308,8 @@ function renderHistory() {
   });
 }
 
-// ─── MEDALS ──────────────────────────────────────────────────────────────────
+// ─── MEDALS ───
+
 function renderMedals() {
   renderRanking();
   renderMedalsList();
@@ -329,18 +321,17 @@ function renderRanking() {
   const list = document.getElementById('rankingList');
   const posClass = ['gold','silver','bronze'];
   const posEmoji = ['🥇','🥈','🥉'];
-
   list.innerHTML = lb.map((u, i) => `
     <div class="ranking-item">
       <div class="ranking-pos ${posClass[i] || ''}">${posEmoji[i] || (i+1)}</div>
       <div style="width:40px;height:40px;border-radius:12px;background:${u.color}22;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${u.emoji}</div>
       <div class="ranking-info">
         <div class="ranking-name">${u.name}</div>
-        <div class="ranking-pts">${u.count} tarefas concluídas</div>
+        <div class="ranking-pts">${u.count} tarefa${u.count !== 1 ? 's' : ''} concluídas</div>
       </div>
       <div style="flex:1;min-width:60px">
         <div class="progress-bar" style="margin:0">
-          <div class="progress-fill" style="width:${max ? (u.count/max)*100 : 0}%"></div>
+          <div class="progress-fill" style="width:${max ? Math.round((u.count/max)*100) : 0}%"></div>
         </div>
       </div>
     </div>
@@ -350,14 +341,12 @@ function renderRanking() {
 function renderMedalsList() {
   const stats = currentUser ? getUserStats(currentUser.id) : { total: 0, photos: 0 };
   const grid  = document.getElementById('medalsList');
-
-  const earned = (m) => {
-    if (m.id === 'first'   && stats.total >= 1)  return true;
-    if (m.id === 'clean10' && stats.total >= 10) return true;
-    if (m.id === 'photo'   && stats.photos >= 5) return true;
+  const earned = m => {
+    if (m.id === 'first'   && stats.total  >= 1)  return true;
+    if (m.id === 'clean10' && stats.total  >= 10) return true;
+    if (m.id === 'photo'   && stats.photos >= 5)  return true;
     return false;
   };
-
   grid.innerHTML = MEDALS_DEF.map(m => {
     const ok = earned(m);
     return `
@@ -374,18 +363,18 @@ function renderMedalsList() {
 }
 
 function bindMedalTabs() {
-  document.querySelectorAll('[data-tab]').forEach(btn => {
-    if (!btn.closest('#screen-medals')) return;
+  document.querySelectorAll('#screen-medals .tab-bar .tab').forEach(btn => {
     btn.addEventListener('click', () => {
       btn.closest('.tab-bar').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById('rankingTab').style.display  = btn.dataset.tab === 'ranking' ? '' : 'none';
-      document.getElementById('medalsTab').style.display   = btn.dataset.tab === 'medals'  ? '' : 'none';
+      document.getElementById('rankingTab').style.display = btn.dataset.tab === 'ranking' ? '' : 'none';
+      document.getElementById('medalsTab').style.display  = btn.dataset.tab === 'medals'  ? '' : 'none';
     });
   });
 }
 
-// ─── CONFIG TABS ─────────────────────────────────────────────────────────────
+// ─── CONFIG TABS ───
+
 function bindConfigTabs() {
   const tabBar = document.querySelector('#screen-config .tab-bar');
   if (!tabBar) return;
@@ -451,7 +440,67 @@ function renderScheduleView() {
   container.innerHTML = weekdays.map(day => {
     const base  = WEEKLY_SCHEDULE[day] || [];
     const extra = custom[day] || [];
-    const all   = [...base, ...extra];
+    const all   = [...base.map(t => ({...t, custom:false})), ...extra];
+    const rows  = all.map(t => {
+      const user = getUserById(t.user);
+      return `
+        <div class="history-item">
+          <div style="width:36px;height:36px;border-radius:8px;background:${user?.color||'#888'}22;display:flex;align-items:center;justify-content:center;font-size:18px">${getTaskIcon(t.task)}</div>
+          <div class="hi-info">
+            <div class="hi-name">${t.task} ${t.custom ? '<span class="chip purple" style="font-size:0.6rem">extra</span>' : ''}</div>
+            <div class="hi-meta">${user?.emoji||'👤'} ${user?.name||t.user} · ⏰ ${t.time}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
     return `
       <div class="history-group">
-        <div class="history-date">${day.charAt(
+        <div class="history-date">${day.charAt(0).toUpperCase() + day.slice(1)}</div>
+        ${rows || '<p style="color:var(--text3);font-size:0.8rem;padding:8px">Nenhuma tarefa</p>'}
+      </div>
+    `;
+  }).join('');
+}
+
+// ─── TOAST ───
+
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3200);
+}
+
+// ─── NOTIFICATIONS ───
+
+function requestNotificationPermission() {
+  if (!('Notification' in window)) { showToast('Notificações não suportadas', 'error'); return; }
+  Notification.requestPermission().then(p => {
+    if (p === 'granted') showToast('Notificações ativas! 🔔', 'success');
+    else showToast('Permissão negada', 'error');
+  });
+}
+
+function scheduleNotifications() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const now   = new Date();
+  const times = [ { h:8, m:0, label:'Tarefas da manhã pendentes!' }, { h:18, m:0, label:'Verifique suas tarefas da tarde!' }, { h:21, m:0, label:'Confira as tarefas da noite!' } ];
+  times.forEach(({ h, m, label }) => {
+    const target = new Date();
+    target.setHours(h, m, 0, 0);
+    const diff = target - now;
+    if (diff > 0) setTimeout(() => new Notification('CasaClean 🏠', { body: label, icon: '/icon-192.png' }), diff);
+  });
+}
+
+// ─── DEBUG ───
+
+function clearTodayData() {
+  if (!confirm('Limpar dados de hoje? (para debug)')) return;
+  clearTodayData_storage();
+  renderDashboard();
+  showToast('Dados de hoje limpos', 'info');
+}
