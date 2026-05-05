@@ -1,10 +1,10 @@
 // ─── USERS (base - overridden by admin settings in localStorage) ───────────
 const USERS_DEFAULT = [
   { id: 'douglas',  name: 'Douglas',  pin: '1234', role: 'admin',  color: '#6c63ff', emoji: '👨‍💼' },
-  { id: 'isadora',  name: 'Isadora',  pin: '2345', role: 'user',   color: '#f472b6', emoji: '👩‍🍳' },
-  { id: 'arthur',   name: 'Arthur',   pin: '3456', role: 'user',   color: '#38bdf8', emoji: '👦' },
-  { id: 'icaro',    name: 'Ícaro',    pin: '4567', role: 'user',   color: '#4ade80', emoji: '🧑' },
-  { id: 'dayane',   name: 'Dayane',   pin: '5678', role: 'user',   color: '#fb923c', emoji: '👩', onlyDinner: true },
+  { id: 'isadora',  name: 'Isadora',  pin: '1234', role: 'user',   color: '#f472b6', emoji: '👩‍🍳' },
+  { id: 'arthur',   name: 'Arthur',   pin: '1234', role: 'user',   color: '#38bdf8', emoji: '👦' },
+  { id: 'icaro',    name: 'Ícaro',    pin: '1234', role: 'user',   color: '#4ade80', emoji: '🧑' },
+  { id: 'dayane',   name: 'Dayane',   pin: '1234', role: 'user',   color: '#fb923c', emoji: '👩', onlyDinner: true },
 ];
 
 // Load users from admin settings (overrides defaults)
