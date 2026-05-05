@@ -1,5 +1,4 @@
-// ─── STATE ───
-
+// ─── STATE ───────────────────────────────────────────────────────────────────
 let currentUser   = null;
 let pinTarget     = null;
 let pinBuffer     = '';
@@ -7,9 +6,9 @@ let filterMode    = 'all';
 let currentScreen = 'home';
 let pendingPhotos = {};
 
-// ─── INIT ───
-
+// ─── INIT ────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  USERS = getUsers();
   buildUserGrid();
   bindNavigation();
   bindPinPad();
@@ -22,8 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// ─── USER GRID ───
-
+// ─── USER GRID ───────────────────────────────────────────────────────────────
 function buildUserGrid() {
   const grid = document.getElementById('userGrid');
   grid.innerHTML = '';
@@ -40,8 +38,7 @@ function buildUserGrid() {
   });
 }
 
-// ─── PIN MODAL ───
-
+// ─── PIN MODAL ───────────────────────────────────────────────────────────────
 function openPinModal(user) {
   pinTarget = user;
   pinBuffer = '';
@@ -90,8 +87,7 @@ function validatePin() {
   }
 }
 
-// ─── APP ENTRY ───
-
+// ─── APP ENTRY ───────────────────────────────────────────────────────────────
 function enterApp() {
   updateUserBadges();
   navigateTo('home');
@@ -102,6 +98,8 @@ function enterApp() {
 function logout() {
   currentUser = null;
   filterMode = 'all';
+  USERS = getUsers();
+  buildUserGrid();
   showScreen('screen-login');
   showToast('Sessão encerrada', 'info');
 }
@@ -114,17 +112,20 @@ function updateUserBadges() {
     const pill = document.getElementById(`${prefix}Pill`);
     if (av)   { av.textContent = currentUser.emoji; av.style.background = currentUser.color + '22'; }
     if (name) name.textContent = currentUser.name;
-    if (pill && currentUser.role === 'admin' && !pill.querySelector('.admin-badge')) {
-      const b = document.createElement('span');
-      b.className = 'admin-badge';
-      b.textContent = 'admin';
-      pill.appendChild(b);
+    if (pill) {
+      const old = pill.querySelector('.admin-badge');
+      if (old) old.remove();
+      if (currentUser.role === 'admin') {
+        const b = document.createElement('span');
+        b.className = 'admin-badge';
+        b.textContent = 'admin';
+        pill.appendChild(b);
+      }
     }
   });
 }
 
-// ─── NAVIGATION ───
-
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -136,7 +137,7 @@ function navigateTo(screen) {
   if (screen === 'home')    renderDashboard();
   if (screen === 'history') renderHistory();
   if (screen === 'medals')  renderMedals();
-  if (screen === 'config')  renderScheduleView();
+  if (screen === 'config')  { renderScheduleView(); renderAdminPanel(); }
 }
 
 function bindNavigation() {
@@ -145,8 +146,7 @@ function bindNavigation() {
   });
 }
 
-// ─── DASHBOARD ───
-
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
 function renderDashboard() {
   const date    = new Date();
   const dateISO = date.toISOString().slice(0, 10);
@@ -172,7 +172,9 @@ function renderDashboard() {
 
   const list   = document.getElementById('tasksList');
   list.innerHTML = '';
-  const toShow = filterMode === 'mine' ? tasks.filter(t => t.user === currentUser?.id) : tasks;
+  const toShow = filterMode === 'mine'
+    ? tasks.filter(t => t.user === currentUser?.id)
+    : tasks;
 
   if (!toShow.length) {
     list.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">Tudo certo!</div><div class="empty-desc">Sem tarefas para exibir</div></div>`;
@@ -180,27 +182,31 @@ function renderDashboard() {
   }
 
   toShow.forEach(task => {
-    const user  = getUserById(task.user);
+    const user   = getUserById(task.user);
     const isDone = task.status === 'done';
     const isOwn  = currentUser && task.user === currentUser.id;
-    const icon  = getTaskIcon(task.task);
+    const overdue = isTaskOverdue(task);
+    const deadline = task.deadline || getDeadlineForTask(task.task);
 
     const item = document.createElement('div');
-    item.className = `task-item${isDone ? ' done' : ''}`;
-    item.id = `task-${task.id}`;
+    item.className = `task-item${isDone ? ' done' : (overdue ? ' overdue' : '')}`;
     item.innerHTML = `
       <div class="task-top">
-        <div class="task-icon">${icon}</div>
+        <div class="task-icon">${getTaskIcon(task.task)}</div>
         <div class="task-info">
           <div class="task-name">${task.task}</div>
           <div class="task-meta">
             <span style="color:${user?.color || '#aaa'}">${user?.emoji || '👤'} ${user?.name || task.user}</span>
             <span>·</span>
             <span>⏰ ${task.time}</span>
+            <span>·</span>
+            <span class="${overdue && !isDone ? 'text-red' : 'text-muted'}">🔔 até ${deadline}</span>
             ${task.custom ? '<span class="chip purple" style="font-size:0.6rem;padding:1px 6px">extra</span>' : ''}
           </div>
         </div>
-        <span class="task-status ${isDone ? 'done' : 'pending'}">${isDone ? '✓ Feito' : 'Pendente'}</span>
+        <span class="task-status ${isDone ? 'done' : (overdue ? 'overdue' : 'pending')}">
+          ${isDone ? '✓ Feito' : (overdue ? '⚠ Atrasada' : 'Pendente')}
+        </span>
       </div>
       ${!isDone && isOwn ? `
         <div class="task-bottom">
@@ -235,8 +241,7 @@ function toggleFilter() {
   renderDashboard();
 }
 
-// ─── PHOTO & COMPLETE ───
-
+// ─── PHOTO & COMPLETE ────────────────────────────────────────────────────────
 function handlePhotoSelect(event, taskId, dateISO) {
   const file = event.target.files[0];
   if (!file) return;
@@ -246,7 +251,6 @@ function handlePhotoSelect(event, taskId, dateISO) {
     const preview = document.getElementById(`preview-${taskId}`);
     if (preview) {
       preview.innerHTML = `<img src="${e.target.result}" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;margin-top:8px;border:1px solid var(--border)">`;
-      preview.style.cssText = 'font-size:0.75rem;color:var(--green);display:flex;flex-direction:column;gap:4px';
     }
     const btn = document.getElementById(`btn-${taskId}`);
     if (btn) btn.disabled = false;
@@ -267,8 +271,7 @@ function handleComplete(taskId, dateISO) {
   }
 }
 
-// ─── HISTORY ───
-
+// ─── HISTORY ─────────────────────────────────────────────────────────────────
 function renderHistory() {
   const list    = document.getElementById('historyList');
   const history = getHistory().slice().reverse();
@@ -308,8 +311,7 @@ function renderHistory() {
   });
 }
 
-// ─── MEDALS ───
-
+// ─── MEDALS ──────────────────────────────────────────────────────────────────
 function renderMedals() {
   renderRanking();
   renderMedalsList();
@@ -318,10 +320,9 @@ function renderMedals() {
 function renderRanking() {
   const lb   = getLeaderboard();
   const max  = lb[0]?.count || 1;
-  const list = document.getElementById('rankingList');
-  const posClass = ['gold','silver','bronze'];
   const posEmoji = ['🥇','🥈','🥉'];
-  list.innerHTML = lb.map((u, i) => `
+  const posClass = ['gold','silver','bronze'];
+  document.getElementById('rankingList').innerHTML = lb.map((u, i) => `
     <div class="ranking-item">
       <div class="ranking-pos ${posClass[i] || ''}">${posEmoji[i] || (i+1)}</div>
       <div style="width:40px;height:40px;border-radius:12px;background:${u.color}22;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${u.emoji}</div>
@@ -339,23 +340,23 @@ function renderRanking() {
 }
 
 function renderMedalsList() {
-  const stats = currentUser ? getUserStats(currentUser.id) : { total: 0, photos: 0 };
-  const grid  = document.getElementById('medalsList');
+  const stats  = currentUser ? getUserStats(currentUser.id) : { total: 0, photos: 0 };
   const earned = m => {
     if (m.id === 'first'   && stats.total  >= 1)  return true;
     if (m.id === 'clean10' && stats.total  >= 10) return true;
+    if (m.id === 'clean30' && stats.total  >= 30) return true;
     if (m.id === 'photo'   && stats.photos >= 5)  return true;
     return false;
   };
-  grid.innerHTML = MEDALS_DEF.map(m => {
+  document.getElementById('medalsList').innerHTML = MEDALS_DEF.map(m => {
     const ok = earned(m);
     return `
-      <div class="medal-card" style="${ok ? '' : 'opacity:0.4;filter:grayscale(1)'}">
+      <div class="medal-card" style="${ok ? '' : 'opacity:0.35;filter:grayscale(1)'}">
         <div class="medal-icon">${m.icon}</div>
         <div class="medal-info">
           <div class="medal-name">${m.name}</div>
           <div class="medal-desc">${m.desc}</div>
-          <div class="medal-count">${ok ? '✓ Conquistado' : 'Bloqueado'}</div>
+          <div class="medal-count" style="color:${ok ? 'var(--green)' : 'var(--text3)'}">${ok ? '✓ Conquistado' : 'Bloqueado'}</div>
         </div>
       </div>
     `;
@@ -373,8 +374,7 @@ function bindMedalTabs() {
   });
 }
 
-// ─── CONFIG TABS ───
-
+// ─── CONFIG TABS ─────────────────────────────────────────────────────────────
 function bindConfigTabs() {
   const tabBar = document.querySelector('#screen-config .tab-bar');
   if (!tabBar) return;
@@ -382,17 +382,19 @@ function bindConfigTabs() {
     btn.addEventListener('click', () => {
       tabBar.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
-      ['add-schedule','add-today','schedule-view'].forEach(id => {
+      ['add-today','deadlines','users-admin','schedule-admin'].forEach(id => {
         const el = document.getElementById(`tab-${id}`);
         if (el) el.style.display = id === btn.dataset.tab ? '' : 'none';
       });
-      if (btn.dataset.tab === 'schedule-view') renderScheduleView();
+      if (btn.dataset.tab === 'schedule-admin') renderScheduleView();
+      if (btn.dataset.tab === 'users-admin')    renderUsersAdmin();
+      if (btn.dataset.tab === 'deadlines')      renderDeadlinesAdmin();
     });
   });
 }
 
 function populateUserSelects() {
-  ['sUser','tUser'].forEach(id => {
+  ['tUser'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
     sel.innerHTML = USERS.map(u => `<option value="${u.id}">${u.emoji} ${u.name}</option>`).join('');
@@ -400,21 +402,6 @@ function populateUserSelects() {
 }
 
 function bindForms() {
-  const fSched = document.getElementById('formAddSchedule');
-  if (fSched) {
-    fSched.addEventListener('submit', e => {
-      e.preventDefault();
-      const dia  = document.getElementById('sDia').value;
-      const nome = document.getElementById('sNome').value.trim();
-      const user = document.getElementById('sUser').value;
-      const hora = document.getElementById('sHora').value;
-      if (!dia || !nome || !user) return;
-      addToCustomSchedule({ weekday: dia, task: nome, user, time: hora });
-      showToast(`"${nome}" adicionada à escala de ${dia}!`, 'success');
-      fSched.reset();
-    });
-  }
-
   const fToday = document.getElementById('formAddToday');
   if (fToday) {
     fToday.addEventListener('submit', e => {
@@ -431,24 +418,122 @@ function bindForms() {
   }
 }
 
+// ─── ADMIN: USERS & PINs ─────────────────────────────────────────────────────
+function renderUsersAdmin() {
+  const container = document.getElementById('usersAdminList');
+  if (!container) return;
+  if (currentUser?.role !== 'admin') {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔒</div><div class="empty-title">Acesso restrito</div><div class="empty-desc">Apenas o admin pode gerenciar usuários</div></div>`;
+    return;
+  }
+  container.innerHTML = USERS.map(u => `
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="width:44px;height:44px;border-radius:12px;background:${u.color}22;color:${u.color};display:flex;align-items:center;justify-content:center;font-size:22px">${u.emoji}</div>
+        <div>
+          <div style="font-weight:700">${u.name}</div>
+          <div style="font-size:0.75rem;color:var(--text3)">${u.role === 'admin' ? '👑 Admin' : (u.onlyDinner ? '🍲 Jantar' : '👤 Morador')}</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Novo PIN (4 dígitos)</label>
+          <input class="form-control" type="password" inputmode="numeric" maxlength="4" id="pin-${u.id}" placeholder="••••">
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <button class="btn btn-primary btn-full" onclick="saveUserPin('${u.id}')">Salvar PIN</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function saveUserPin(userId) {
+  const input = document.getElementById(`pin-${userId}`);
+  const newPin = input?.value.trim();
+  if (!newPin || newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
+    showToast('PIN deve ter exatamente 4 dígitos numéricos', 'error');
+    return;
+  }
+  const users = getUsers();
+  const user  = users.find(u => u.id === userId);
+  if (!user) return;
+  user.pin = newPin;
+  saveUsers(users);
+  USERS = users;
+  showToast(`PIN de ${user.name} atualizado! 🔐`, 'success');
+  if (input) input.value = '';
+}
+
+// ─── ADMIN: DEADLINES ────────────────────────────────────────────────────────
+function renderDeadlinesAdmin() {
+  const container = document.getElementById('deadlinesAdminList');
+  if (!container) return;
+  if (currentUser?.role !== 'admin') {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔒</div><div class="empty-title">Acesso restrito</div></div>`;
+    return;
+  }
+  const dl = getDeadlines();
+  const items = Object.entries(dl).filter(([k]) => k !== 'default');
+  container.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <h3 style="margin-bottom:16px">⏰ Prazos por tarefa</h3>
+      <p style="font-size:0.8rem;color:var(--text3);margin-bottom:16px">Define até que horas cada tipo de tarefa pode ser concluída.</p>
+      ${items.map(([k, v]) => `
+        <div class="form-row" style="margin-bottom:8px;align-items:center">
+          <div class="form-group" style="margin-bottom:0">
+            <label>${getTaskIcon(k)} ${k.charAt(0).toUpperCase() + k.slice(1)}</label>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <input class="form-control" type="time" id="dl-${k.replace(/\s/g,'-')}" value="${v}">
+          </div>
+        </div>
+      `).join('')}
+      <div class="form-row" style="margin-bottom:8px;align-items:center">
+        <div class="form-group" style="margin-bottom:0">
+          <label>📌 Padrão (outras tarefas)</label>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <input class="form-control" type="time" id="dl-default" value="${dl['default'] || '23:59'}">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="saveDeadlinesAdmin()">💾 Salvar prazos</button>
+    </div>
+  `;
+}
+
+function saveDeadlinesAdmin() {
+  const dl = getDeadlines();
+  const items = Object.keys(dl);
+  items.forEach(k => {
+    const inputId = 'dl-' + (k === 'default' ? 'default' : k.replace(/\s/g, '-'));
+    const el = document.getElementById(inputId);
+    if (el && el.value) dl[k] = el.value;
+  });
+  saveDeadlines(dl);
+  showToast('Prazos salvos! ✅', 'success');
+}
+
+// ─── SCHEDULE VIEW ───────────────────────────────────────────────────────────
 function renderScheduleView() {
   const container = document.getElementById('scheduleViewList');
   if (!container) return;
   const weekdays = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
   const custom   = getCustomSchedule();
+  const base     = getBaseSchedule();
 
   container.innerHTML = weekdays.map(day => {
-    const base  = WEEKLY_SCHEDULE[day] || [];
-    const extra = custom[day] || [];
-    const all   = [...base.map(t => ({...t, custom:false})), ...extra];
-    const rows  = all.map(t => {
+    const baseTasks  = (base[day] || []).map(t => ({ ...t, custom: false }));
+    const extraTasks = (custom[day] || []);
+    const all = [...baseTasks, ...extraTasks];
+    const rows = all.map(t => {
       const user = getUserById(t.user);
       return `
         <div class="history-item">
           <div style="width:36px;height:36px;border-radius:8px;background:${user?.color||'#888'}22;display:flex;align-items:center;justify-content:center;font-size:18px">${getTaskIcon(t.task)}</div>
           <div class="hi-info">
             <div class="hi-name">${t.task} ${t.custom ? '<span class="chip purple" style="font-size:0.6rem">extra</span>' : ''}</div>
-            <div class="hi-meta">${user?.emoji||'👤'} ${user?.name||t.user} · ⏰ ${t.time}</div>
+            <div class="hi-meta">${user?.emoji||'👤'} ${user?.name||t.user} · ⏰ ${t.time} · 🔔 até ${getDeadlineForTask(t.task)}</div>
           </div>
         </div>
       `;
@@ -456,14 +541,20 @@ function renderScheduleView() {
     return `
       <div class="history-group">
         <div class="history-date">${day.charAt(0).toUpperCase() + day.slice(1)}</div>
-        ${rows || '<p style="color:var(--text3);font-size:0.8rem;padding:8px">Nenhuma tarefa</p>'}
+        ${rows || '<p style="color:var(--text3);font-size:0.8rem;padding:8px 4px">Nenhuma tarefa</p>'}
       </div>
     `;
   }).join('');
 }
 
-// ─── TOAST ───
+function renderAdminPanel() {
+  if (currentUser?.role === 'admin') {
+    renderUsersAdmin();
+    renderDeadlinesAdmin();
+  }
+}
 
+// ─── TOAST ───────────────────────────────────────────────────────────────────
 function showToast(msg, type = 'info') {
   const container = document.getElementById('toastContainer');
   const icons = { success: '✅', error: '❌', info: 'ℹ️' };
@@ -474,8 +565,7 @@ function showToast(msg, type = 'info') {
   setTimeout(() => toast.remove(), 3200);
 }
 
-// ─── NOTIFICATIONS ───
-
+// ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
 function requestNotificationPermission() {
   if (!('Notification' in window)) { showToast('Notificações não suportadas', 'error'); return; }
   Notification.requestPermission().then(p => {
@@ -487,7 +577,12 @@ function requestNotificationPermission() {
 function scheduleNotifications() {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   const now   = new Date();
-  const times = [ { h:8, m:0, label:'Tarefas da manhã pendentes!' }, { h:18, m:0, label:'Verifique suas tarefas da tarde!' }, { h:21, m:0, label:'Confira as tarefas da noite!' } ];
+  const times = [
+    { h: 7,  m: 0,  label: '🌅 Lixo da manhã — não esqueça antes das 7:30!' },
+    { h: 11, m: 30, label: '☀️ Tarefas da manhã precisam ser concluídas!' },
+    { h: 19, m: 30, label: '🍽️ Louça deve ser feita até as 20:00!' },
+    { h: 23, m: 0,  label: '🌙 Jantar — última chance de registrar!' },
+  ];
   times.forEach(({ h, m, label }) => {
     const target = new Date();
     target.setHours(h, m, 0, 0);
@@ -496,10 +591,9 @@ function scheduleNotifications() {
   });
 }
 
-// ─── DEBUG ───
-
+// ─── DEBUG ───────────────────────────────────────────────────────────────────
 function clearTodayData() {
-  if (!confirm('Limpar dados de hoje? (para debug)')) return;
+  if (!confirm('Limpar dados de hoje? (debug)')) return;
   clearTodayData_storage();
   renderDashboard();
   showToast('Dados de hoje limpos', 'info');

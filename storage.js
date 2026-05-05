@@ -1,13 +1,11 @@
-// ─── KEYS ───
-
+// ─── KEYS ────────────────────────────────────────────────────────────────────
 const STORAGE_KEYS = {
   tasks:    'casaclean_tasks',
   history:  'casaclean_history',
   schedule: 'casaclean_schedule',
 };
 
-// ─── HELPERS ───
-
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -23,8 +21,7 @@ function saveJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-// ─── CUSTOM SCHEDULE ───
-
+// ─── CUSTOM SCHEDULE (extras) ────────────────────────────────────────────────
 function getCustomSchedule() {
   return loadJSON(STORAGE_KEYS.schedule, {});
 }
@@ -36,8 +33,7 @@ function addToCustomSchedule({ weekday, task, user, time }) {
   saveJSON(STORAGE_KEYS.schedule, s);
 }
 
-// ─── DAILY TASKS ───
-
+// ─── DAILY TASKS ─────────────────────────────────────────────────────────────
 function getDailyTasks(dateISO = todayISO()) {
   const stored = loadJSON(STORAGE_KEYS.tasks, {});
   return stored[dateISO] || null;
@@ -55,8 +51,8 @@ function initDailyTasks(date = new Date()) {
   if (existing) return existing;
 
   const weekday = getWeekdayName(date);
-  const base    = (WEEKLY_SCHEDULE[weekday] || []).map(t => ({ ...t, custom: false }));
-  const extras  = (getCustomSchedule()[weekday] || []);
+  const base    = getTasksForDay(date).map(t => ({ ...t, custom: false }));
+  const extras  = getCustomSchedule()[weekday] || [];
   const all     = [...base, ...extras];
 
   const tasks = all.map((t, i) => ({
@@ -64,6 +60,7 @@ function initDailyTasks(date = new Date()) {
     task:        t.task,
     user:        t.user,
     time:        t.time || '18:00',
+    deadline:    getDeadlineForTask(t.task),
     status:      'pending',
     proofUrl:    null,
     completedAt: null,
@@ -91,13 +88,20 @@ function addExtraTaskToday({ task, user, time }) {
   const dateISO = todayISO();
   const tasks   = getDailyTasks(dateISO) || initDailyTasks();
   const id      = `${dateISO}-extra-${Date.now()}`;
-  tasks.push({ id, task, user, time: time || '18:00', status: 'pending', proofUrl: null, completedAt: null, custom: true });
+  tasks.push({
+    id, task, user,
+    time:        time || '18:00',
+    deadline:    getDeadlineForTask(task),
+    status:      'pending',
+    proofUrl:    null,
+    completedAt: null,
+    custom:      true,
+  });
   saveDailyTasks(tasks, dateISO);
   return id;
 }
 
-// ─── HISTORY ───
-
+// ─── HISTORY ─────────────────────────────────────────────────────────────────
 function addToHistory(task, dateISO) {
   const history = loadJSON(STORAGE_KEYS.history, []);
   history.push({ ...task, date: dateISO });
@@ -108,10 +112,9 @@ function getHistory() {
   return loadJSON(STORAGE_KEYS.history, []);
 }
 
-// ─── STATS ───
-
+// ─── STATS ───────────────────────────────────────────────────────────────────
 function getUserStats(userId) {
-  const mine   = getHistory().filter(h => h.user === userId);
+  const mine = getHistory().filter(h => h.user === userId);
   return { total: mine.length, photos: mine.filter(h => h.proofUrl).length };
 }
 
@@ -124,8 +127,7 @@ function getLeaderboard() {
     .sort((a, b) => b.count - a.count);
 }
 
-// ─── DEBUG ───
-
+// ─── DEBUG ───────────────────────────────────────────────────────────────────
 function clearTodayData_storage() {
   const stored = loadJSON(STORAGE_KEYS.tasks, {});
   delete stored[todayISO()];

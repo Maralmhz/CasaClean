@@ -15,14 +15,9 @@
 <body>
 <div id="app">
 
-  <!-- ══════════════════════════════════
-       TOAST CONTAINER
-  ═══════════════════════════════════ -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- ══════════════════════════════════
-       PIN MODAL
-  ═══════════════════════════════════ -->
+  <!-- PIN MODAL -->
   <div class="modal-overlay hidden" id="pinModal">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
@@ -51,9 +46,7 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════
-       SCREEN: LOGIN
-  ═══════════════════════════════════ -->
+  <!-- LOGIN -->
   <div class="screen active" id="screen-login">
     <div class="login-hero">
       <div class="login-icon">🏠</div>
@@ -63,9 +56,7 @@
     <div class="user-grid" id="userGrid"></div>
   </div>
 
-  <!-- ══════════════════════════════════
-       SCREEN: HOME (Dashboard)
-  ═══════════════════════════════════ -->
+  <!-- HOME -->
   <div class="screen" id="screen-home">
     <div class="topbar">
       <div class="topbar-logo">
@@ -80,7 +71,6 @@
         <button class="icon-btn" onclick="requestNotificationPermission()" title="Notificações">🔔</button>
       </div>
     </div>
-
     <div class="main-content">
       <div class="date-badge">
         <div>
@@ -89,7 +79,6 @@
         </div>
         <div class="date-emoji" id="dateEmoji">📅</div>
       </div>
-
       <div class="summary-strip">
         <div class="summary-item">
           <span class="s-value" id="sumTotal" style="color:var(--accent2)">0</span>
@@ -104,11 +93,9 @@
           <span class="s-label">Pendentes</span>
         </div>
       </div>
-
       <div class="progress-bar">
         <div class="progress-fill" id="progressFill" style="width:0%"></div>
       </div>
-
       <div class="section-head">
         <div>
           <h2>Tarefas de hoje</h2>
@@ -116,11 +103,9 @@
         </div>
         <button class="btn btn-ghost btn-sm" onclick="toggleFilter()" id="filterBtn">Todas</button>
       </div>
-
       <div class="tasks-list" id="tasksList"></div>
     </div>
-
-    <nav class="bottom-nav" id="mainNav">
+    <nav class="bottom-nav">
       <button class="nav-item active" data-screen="home"><span class="nav-icon">🏠</span>Hoje</button>
       <button class="nav-item" data-screen="history"><span class="nav-icon">📋</span>Histórico</button>
       <button class="nav-item" data-screen="medals"><span class="nav-icon">🏆</span>Medalhas</button>
@@ -128,15 +113,10 @@
     </nav>
   </div>
 
-  <!-- ══════════════════════════════════
-       SCREEN: HISTORY
-  ═══════════════════════════════════ -->
+  <!-- HISTORY -->
   <div class="screen" id="screen-history">
     <div class="topbar">
-      <div class="topbar-logo">
-        <span class="logo-icon">🏠</span>
-        <span class="logo-text">CasaClean</span>
-      </div>
+      <div class="topbar-logo"><span class="logo-icon">🏠</span><span class="logo-text">CasaClean</span></div>
       <div class="topbar-actions">
         <div class="avatar-pill" id="histUserPill" onclick="logout()">
           <div class="av" id="histUserAv"></div>
@@ -145,12 +125,10 @@
       </div>
     </div>
     <div class="main-content">
-      <div class="section-head">
-        <div><h2>Histórico</h2><p>Tarefas concluídas</p></div>
-      </div>
+      <div class="section-head"><div><h2>Histórico</h2><p>Tarefas concluídas</p></div></div>
       <div id="historyList"></div>
     </div>
-    <nav class="bottom-nav" id="histNav">
+    <nav class="bottom-nav">
       <button class="nav-item" data-screen="home"><span class="nav-icon">🏠</span>Hoje</button>
       <button class="nav-item active" data-screen="history"><span class="nav-icon">📋</span>Histórico</button>
       <button class="nav-item" data-screen="medals"><span class="nav-icon">🏆</span>Medalhas</button>
@@ -158,15 +136,10 @@
     </nav>
   </div>
 
-  <!-- ══════════════════════════════════
-       SCREEN: MEDALS
-  ═══════════════════════════════════ -->
+  <!-- MEDALS -->
   <div class="screen" id="screen-medals">
     <div class="topbar">
-      <div class="topbar-logo">
-        <span class="logo-icon">🏠</span>
-        <span class="logo-text">CasaClean</span>
-      </div>
+      <div class="topbar-logo"><span class="logo-icon">🏠</span><span class="logo-text">CasaClean</span></div>
       <div class="topbar-actions">
         <div class="avatar-pill" id="medUserPill" onclick="logout()">
           <div class="av" id="medUserAv"></div>
@@ -175,19 +148,13 @@
       </div>
     </div>
     <div class="main-content">
-      <div class="section-head">
-        <div><h2>Medalhas & Ranking</h2><p>Performance da casa</p></div>
-      </div>
+      <div class="section-head"><div><h2>Medalhas & Ranking</h2><p>Performance da casa</p></div></div>
       <div class="tab-bar">
         <button class="tab active" data-tab="ranking">🏆 Ranking</button>
         <button class="tab" data-tab="medals">🎖 Conquistas</button>
       </div>
-      <div id="rankingTab">
-        <div id="rankingList"></div>
-      </div>
-      <div id="medalsTab" style="display:none">
-        <div class="medals-grid" id="medalsList"></div>
-      </div>
+      <div id="rankingTab"><div id="rankingList"></div></div>
+      <div id="medalsTab" style="display:none"><div class="medals-grid" id="medalsList"></div></div>
     </div>
     <nav class="bottom-nav">
       <button class="nav-item" data-screen="home"><span class="nav-icon">🏠</span>Hoje</button>
@@ -197,15 +164,10 @@
     </nav>
   </div>
 
-  <!-- ══════════════════════════════════
-       SCREEN: CONFIG
-  ═══════════════════════════════════ -->
+  <!-- CONFIG -->
   <div class="screen" id="screen-config">
     <div class="topbar">
-      <div class="topbar-logo">
-        <span class="logo-icon">🏠</span>
-        <span class="logo-text">CasaClean</span>
-      </div>
+      <div class="topbar-logo"><span class="logo-icon">🏠</span><span class="logo-text">CasaClean</span></div>
       <div class="topbar-actions">
         <div class="avatar-pill" id="cfgUserPill" onclick="logout()">
           <div class="av" id="cfgUserAv"></div>
@@ -214,52 +176,19 @@
       </div>
     </div>
     <div class="main-content">
-      <div class="section-head">
-        <div><h2>Configurações</h2><p>Gerencie o app</p></div>
-      </div>
+      <div class="section-head"><div><h2>Configurações</h2><p>Gerencie o app</p></div></div>
 
       <div class="tab-bar">
-        <button class="tab active" data-tab="add-schedule">+ Escala</button>
-        <button class="tab" data-tab="add-today">+ Hoje</button>
-        <button class="tab" data-tab="schedule-view">Ver Escala</button>
-      </div>
-
-      <!-- Tab: Add to Schedule -->
-      <div id="tab-add-schedule">
-        <div class="card">
-          <h3 style="margin-bottom:var(--space-4)">Nova tarefa na escala</h3>
-          <form id="formAddSchedule">
-            <div class="form-group">
-              <label>Dia da semana</label>
-              <select class="form-control" id="sDia" required>
-                <option value="">Selecione o dia</option>
-                <option>domingo</option><option>segunda</option><option>terça</option>
-                <option>quarta</option><option>quinta</option><option>sexta</option><option>sábado</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Nome da tarefa</label>
-              <input class="form-control" id="sNome" type="text" placeholder="Ex: Organizar armário" required>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Responsável</label>
-                <select class="form-control" id="sUser" required></select>
-              </div>
-              <div class="form-group">
-                <label>Horário</label>
-                <input class="form-control" id="sHora" type="time" value="18:00" required>
-              </div>
-            </div>
-            <button class="btn btn-primary btn-full" type="submit">Salvar na escala</button>
-          </form>
-        </div>
+        <button class="tab active" data-tab="add-today">+ Hoje</button>
+        <button class="tab" data-tab="deadlines">⏰ Prazos</button>
+        <button class="tab" data-tab="users-admin">👥 Usuários</button>
+        <button class="tab" data-tab="schedule-admin">📅 Escala</button>
       </div>
 
       <!-- Tab: Add Today -->
-      <div id="tab-add-today" style="display:none">
+      <div id="tab-add-today">
         <div class="card">
-          <h3 style="margin-bottom:var(--space-4)">Tarefa extra de hoje</h3>
+          <h3 style="margin-bottom:16px">Tarefa extra de hoje</h3>
           <form id="formAddToday">
             <div class="form-group">
               <label>Nome da tarefa</label>
@@ -280,8 +209,18 @@
         </div>
       </div>
 
-      <!-- Tab: View Schedule -->
-      <div id="tab-schedule-view" style="display:none">
+      <!-- Tab: Deadlines (admin only) -->
+      <div id="tab-deadlines" style="display:none">
+        <div id="deadlinesAdminList"></div>
+      </div>
+
+      <!-- Tab: Users admin -->
+      <div id="tab-users-admin" style="display:none">
+        <div id="usersAdminList"></div>
+      </div>
+
+      <!-- Tab: Schedule view -->
+      <div id="tab-schedule-admin" style="display:none">
         <div id="scheduleViewList"></div>
       </div>
 
@@ -296,8 +235,7 @@
     </nav>
   </div>
 
-</div><!-- #app -->
-
+</div>
 <script src="data.js"></script>
 <script src="storage.js"></script>
 <script src="app.js"></script>
