@@ -21,7 +21,7 @@ function saveJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-// ─── FIRESTORE HELPERS ─────────────────────────────────────────────────────
+// ─── FIRESTORE HELPERS ───────────────────────────────────────────────
 function syncToFirestore(col, docId, data) {
   try {
     db.collection(col).doc(docId).set(data, { merge: true });
@@ -35,8 +35,8 @@ async function loadFromFirestore(col, docId) {
   } catch(e) { console.warn('Firestore load error:', e); return null; }
 }
 
-// ─── COMPRIME FOTO E SALVA NO FIRESTORE ────────────────────────────────
-async function compressAndSavePhoto(taskId, base64DataUrl, dateISO) {
+// ─── COMPRIME FOTO (retorna base64 comprimido) ────────────────────────────
+async function compressPhoto(base64DataUrl) {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -46,16 +46,14 @@ async function compressAndSavePhoto(taskId, base64DataUrl, dateISO) {
       canvas.width  = img.width  * ratio;
       canvas.height = img.height * ratio;
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      const compressed = canvas.toDataURL('image/jpeg', 0.5);
-      syncToFirestore('photos', `${dateISO}-${taskId}`, { photo: compressed, taskId, date: dateISO });
-      resolve(compressed);
+      resolve(canvas.toDataURL('image/jpeg', 0.5));
     };
     img.onerror = () => resolve(base64DataUrl);
     img.src = base64DataUrl;
   });
 }
 
-// ─── CUSTOM SCHEDULE ─────────────────────────────────────────────────────────
+// ─── CUSTOM SCHEDULE ───────────────────────────────────────────────────────
 function getCustomSchedule() {
   return loadJSON(STORAGE_KEYS.schedule, {});
 }
@@ -68,18 +66,19 @@ function addToCustomSchedule({ weekday, task, user, time }) {
   syncToFirestore('schedule', 'custom', s);
 }
 
-// ─── DAILY TASKS ──────────────────────────────────────────────────────────────
+// ─── DAILY TASKS ───────────────────────────────────────────────────────────────
 function getDailyTasks(dateISO = todayISO()) {
   const stored = loadJSON(STORAGE_KEYS.tasks, {});
   return stored[dateISO] || null;
 }
 
 function saveDailyTasks(tasks, dateISO = todayISO()) {
+  // Salva localmente com foto completa
   const stored = loadJSON(STORAGE_KEYS.tasks, {});
   stored[dateISO] = tasks;
   saveJSON(STORAGE_KEYS.tasks, stored);
-  const tasksClean = tasks.map(t => ({ ...t, proofUrl: t.proofUrl?.startsWith('data:') ? '[foto-local]' : (t.proofUrl || null) }));
-  syncToFirestore('tasks', dateISO, { tasks: tasksClean });
+  // Salva no Firestore também com foto (base64 comprimida já está em ~15-30KB)
+  syncToFirestore('tasks', dateISO, { tasks });
 }
 
 function initDailyTasks(date = new Date()) {
@@ -114,7 +113,8 @@ async function completeTask(taskId, proofBase64, dateISO = todayISO()) {
   const task = tasks.find(t => t.id === taskId);
   if (!task) return false;
 
-  const proofUrl = await compressAndSavePhoto(taskId, proofBase64, dateISO);
+  // Comprime a foto e salva direto na task e no histórico
+  const proofUrl = await compressPhoto(proofBase64);
 
   task.status      = 'done';
   task.proofUrl    = proofUrl;
@@ -144,20 +144,21 @@ function addExtraTaskToday({ task, user, time }) {
 // ─── HISTORY ──────────────────────────────────────────────────────────────────
 function addToHistory(task, dateISO) {
   const history = loadJSON(STORAGE_KEYS.history, []);
-  history.push({ ...task, date: dateISO });
+  const entry = { ...task, date: dateISO };
+  history.push(entry);
   saveJSON(STORAGE_KEYS.history, history);
-  const taskClean = { ...task, date: dateISO, proofUrl: task.proofUrl?.startsWith('data:') ? '[foto-local]' : (task.proofUrl || null) };
-  syncToFirestore('history', `${dateISO}-${task.id}`, taskClean);
+  // Salva no Firestore com a foto real
+  syncToFirestore('history', `${dateISO}-${task.id}`, entry);
 }
 
 function getHistory() {
   return loadJSON(STORAGE_KEYS.history, []);
 }
 
-// ─── STATS ────────────────────────────────────────────────────────────────────
+// ─── STATS ───────────────────────────────────────────────────────────────────
 function getUserStats(userId) {
   const mine = getHistory().filter(h => h.user === userId);
-  return { total: mine.length, photos: mine.filter(h => h.proofUrl).length };
+  return { total: mine.length, photos: mine.filter(h => h.proofUrl && h.proofUrl !== '[foto-local]').length };
 }
 
 function getLeaderboard() {
@@ -169,20 +170,20 @@ function getLeaderboard() {
     .sort((a, b) => b.count - a.count);
 }
 
-// ─── USERS ────────────────────────────────────────────────────────────────────
+// ─── USERS ───────────────────────────────────────────────────────────────────
 function saveUsers(users) {
   USERS = users;
   localStorage.setItem('casaclean_users', JSON.stringify(users));
   syncToFirestore('config', 'users', { users });
 }
 
-// ─── DEADLINES ───────────────────────────────────────────────────────────────
+// ─── DEADLINES ─────────────────────────────────────────────────────────────────
 function saveDeadlines(deadlines) {
   localStorage.setItem('casaclean_deadlines', JSON.stringify(deadlines));
   syncToFirestore('config', 'deadlines', deadlines);
 }
 
-// ─── HYDRATE DO FIRESTORE ────────────────────────────────────────────────────
+// ─── HYDRATE DO FIRESTORE ──────────────────────────────────────────────────────
 async function hydrateFromFirestore() {
   try {
     const usersSnap = await db.collection('config').doc('users').get();
