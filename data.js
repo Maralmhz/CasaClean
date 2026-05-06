@@ -2,14 +2,13 @@
 const USERS_DEFAULT = [
   // Admins — topo
   { id: 'douglas',  name: 'Douglas',  pin: '1234', role: 'admin',  color: '#6c63ff', emoji: '👨‍💼' },
-  { id: 'dayane',   name: 'Dayane',   pin: '1234', role: 'admin',  color: '#fb923c', emoji: '🦊', onlyDinner: true },
+  { id: 'dayane',   name: 'Dayane',   pin: '1234', role: 'admin',  color: '#fb923c', emoji: '👩‍👧‍👦', onlyDinner: true },
   // Filhos — ordem: mais velha ao mais novo
   { id: 'isadora',  name: 'Isadora',  pin: '1234', role: 'user',   color: '#f472b6', emoji: '👧' },
   { id: 'arthur',   name: 'Arthur',   pin: '1234', role: 'user',   color: '#38bdf8', emoji: '👦' },
   { id: 'icaro',    name: 'Ícaro',    pin: '1234', role: 'user',   color: '#4ade80', emoji: '👶' },
 ];
 
-// Load users from admin settings (overrides defaults)
 function getUsers() {
   try {
     const saved = localStorage.getItem('casaclean_users');
@@ -24,7 +23,7 @@ function saveUsers(users) {
   localStorage.setItem('casaclean_users', JSON.stringify(users));
 }
 
-// ─── TASK DEADLINES (admin-configurable) ────────────────────────────────────────────
+// ─── TASK DEADLINES ──────────────────────────────────────────────────────────────────
 const DEADLINES_DEFAULT = {
   'lixo manhã':    '07:30',
   'colocar lixo':  '07:30',
@@ -87,7 +86,7 @@ function getTaskIcon(name) {
   return '📌';
 }
 
-// ─── WEEKLY SCHEDULE (admin-editable base) ──────────────────────────────────────────────
+// ─── WEEKLY SCHEDULE ──────────────────────────────────────────────────────────────────────────
 const WEEKLY_SCHEDULE_DEFAULT = {
   domingo: [
     { task: 'Louça',        user: 'douglas', time: '08:00' },
@@ -186,10 +185,10 @@ function getInitials(name) {
 
 // ─── MEDALS ───────────────────────────────────────────────────────────────────────────────
 const MEDALS_DEF = [
-  { id: 'first',   icon: '🌟', name: 'Primeiro passo',  desc: 'Concluiu a primeira tarefa',         threshold: 1  },
-  { id: 'clean10', icon: '💎', name: 'Dedicação',        desc: 'Concluiu 10 tarefas no total',        threshold: 10 },
-  { id: 'clean30', icon: '🏆', name: 'Campeão',          desc: 'Concluiu 30 tarefas no total',        threshold: 30 },
-  { id: 'photo',   icon: '📸', name: 'Fotógrafo',        desc: 'Enviou 5 comprovantes',               threshold: 5  },
-  { id: 'streak3', icon: '🔥', name: '3 dias seguidos',  desc: 'Completou tarefas 3 dias seguidos',   threshold: 3  },
-  { id: 'speed',   icon: '⚡', name: 'Relâmpago',        desc: 'Concluiu antes do prazo',             threshold: 1  },
+  { id: 'first',   icon: '🌟', name: 'Primeiro passo',  desc: 'Concluiu a primeira tarefa',        threshold: 1  },
+  { id: 'clean10', icon: '💎', name: 'Dedicação',        desc: 'Concluiu 10 tarefas no total',       threshold: 10 },
+  { id: 'clean30', icon: '🏆', name: 'Campeão',          desc: 'Concluiu 30 tarefas no total',       threshold: 30 },
+  { id: 'photo',   icon: '📸', name: 'Fotógrafo',        desc: 'Enviou 5 comprovantes',              threshold: 5  },
+  { id: 'streak3', icon: '🔥', name: '3 dias seguidos',  desc: 'Completou tarefas 3 dias seguidos',  threshold: 3  },
+  { id: 'speed',   icon: '⚡', name: 'Relâmpago',        desc: 'Concluiu antes do prazo',            threshold: 1  },
 ];

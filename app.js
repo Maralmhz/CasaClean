@@ -30,42 +30,39 @@ function buildUserGrid() {
   const admins = USERS.filter(u => u.role === 'admin');
   const kids   = USERS.filter(u => u.role !== 'admin');
 
-  // ─ Linha dos admins (2 colunas, lado a lado) ──────────────────────────────────
+  // ─ Linha dos admins: 2 cards, mesmo tamanho dos filhos ──────────────────────
   if (admins.length) {
     const adminRow = document.createElement('div');
-    adminRow.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%;max-width:320px;margin-bottom:8px';
-    admins.forEach(u => adminRow.appendChild(makeUserCard(u, true)));
+    adminRow.className = 'user-grid-row admin-row';
+    admins.forEach(u => adminRow.appendChild(makeUserCard(u)));
     grid.appendChild(adminRow);
   }
 
-  // ─ Divisor visual ────────────────────────────────────────────────────────────────
+  // ─ Separador ──────────────────────────────────────────────────────────────────
   if (admins.length && kids.length) {
     const sep = document.createElement('div');
-    sep.style.cssText = 'width:100%;max-width:320px;display:flex;align-items:center;gap:8px;padding:0 4px';
-    sep.innerHTML = '<div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:0.68rem;color:var(--text3);white-space:nowrap;letter-spacing:.5px">FILHOS</span><div style="flex:1;height:1px;background:var(--border)"></div>';
+    sep.className = 'user-grid-sep';
+    sep.innerHTML = '<div class="sep-line"></div><span class="sep-label">FILHOS</span><div class="sep-line"></div>';
     grid.appendChild(sep);
   }
 
-  // ─ Linha das crianças (3 colunas) ──────────────────────────────────────────────
+  // ─ Linha dos filhos: 3 cards ────────────────────────────────────────────────
   if (kids.length) {
     const kidsRow = document.createElement('div');
-    kidsRow.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:320px';
-    kids.forEach(u => kidsRow.appendChild(makeUserCard(u, false)));
+    kidsRow.className = 'user-grid-row kids-row';
+    kids.forEach(u => kidsRow.appendChild(makeUserCard(u)));
     grid.appendChild(kidsRow);
   }
 }
 
-function makeUserCard(u, isAdmin) {
+function makeUserCard(u) {
+  const isAdmin = u.role === 'admin';
   const card = document.createElement('div');
-  card.className = 'user-card';
-  if (isAdmin) {
-    // Cards dos admins um pouco maiores com badge de coroa
-    card.style.cssText = 'border-color:' + u.color + '44;box-shadow:0 2px 12px ' + u.color + '22';
-  }
+  card.className = 'user-card' + (isAdmin ? ' user-card--admin' : '');
   card.innerHTML = `
     <div class="av-lg" style="background:${u.color}22;color:${u.color}">${u.emoji}</div>
     <span class="user-name">${u.name}</span>
-    <span class="user-role">${isAdmin ? '👑 Admin' : (u.onlyDinner ? '🍲 Jantar' : '👶 Filho(a)')}</span>
+    <span class="user-role">${isAdmin ? '👑 Admin' : '🌟 Filho(a)'}</span>
   `;
   card.addEventListener('click', () => openPinModal(u));
   return card;
@@ -469,7 +466,7 @@ function renderUsersAdmin() {
         <div style="width:44px;height:44px;border-radius:12px;background:${u.color}22;color:${u.color};display:flex;align-items:center;justify-content:center;font-size:22px">${u.emoji}</div>
         <div>
           <div style="font-weight:700">${u.name}</div>
-          <div style="font-size:0.75rem;color:var(--text3)">${u.role === 'admin' ? '👑 Admin' : (u.onlyDinner ? '🍲 Jantar' : '👶 Filho(a)')}</div>
+          <div style="font-size:0.75rem;color:var(--text3)">${u.role === 'admin' ? '👑 Admin' : '🌟 Filho(a)'}</div>
         </div>
       </div>
       <div class="form-row">
