@@ -1,7 +1,9 @@
-// ─── FIREBASE CONFIG ─────────────────────────────────────────────────────────
+// ─── FIREBASE CONFIG (sem Storage) ───────────────────────────────────────────────
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { getStorage, ref, uploadString, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+import {
+  getFirestore, doc, getDoc, setDoc,
+  collection, getDocs
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCi2G_wS4PXiupQnBBXX8NWjojHNq40Kfc",
@@ -13,7 +15,5 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const db  = getFirestore(app);
-export const storage = getStorage(app);
-
-export { doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, orderBy, ref, uploadString, getDownloadURL };
+export const db = getFirestore(app);
+export { doc, getDoc, setDoc, collection, getDocs };
