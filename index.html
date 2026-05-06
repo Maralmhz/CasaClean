@@ -12,7 +12,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script>
-    // Aplica tema salvo antes do render para evitar flash
     (function() {
       const t = localStorage.getItem('cc-theme');
       if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
@@ -23,6 +22,12 @@
 <div id="app">
 
   <div class="toast-container" id="toastContainer"></div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox hidden" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img id="lightboxImg" src="" alt="Foto ampliada">
+  </div>
 
   <!-- PIN MODAL -->
   <div class="modal-overlay hidden" id="pinModal">
@@ -261,7 +266,6 @@
     }
     syncThemeButtons();
   }
-
   function syncThemeButtons() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     document.querySelectorAll('.icon-btn[onclick="toggleTheme()"]').forEach(btn => {
@@ -269,9 +273,26 @@
       btn.title = isDark ? 'Modo claro' : 'Modo escuro';
     });
   }
-
-  // Sincroniza ícones após DOM estar pronto
   document.addEventListener('DOMContentLoaded', syncThemeButtons);
+</script>
+
+<!-- Lightbox -->
+<script>
+  function openLightbox(src) {
+    const lb = document.getElementById('lightbox');
+    const img = document.getElementById('lightboxImg');
+    img.src = src;
+    lb.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.add('hidden');
+    document.getElementById('lightboxImg').src = '';
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+  });
 </script>
 
 <!-- App -->
