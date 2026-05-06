@@ -1,10 +1,12 @@
-// ─── USERS (base - overridden by admin settings in localStorage) ───────────
+// ─── USERS (base - overridden by admin settings in localStorage) ─────────────────
 const USERS_DEFAULT = [
+  // Admins — topo
   { id: 'douglas',  name: 'Douglas',  pin: '1234', role: 'admin',  color: '#6c63ff', emoji: '👨‍💼' },
-  { id: 'isadora',  name: 'Isadora',  pin: '1234', role: 'user',   color: '#f472b6', emoji: '👩‍🍳' },
-  { id: 'arthur',   name: 'Arthur',   pin: '1234', role: 'user',   color: '#38bdf8', emoji: '👦' },
-  { id: 'icaro',    name: 'Ícaro',    pin: '1234', role: 'user',   color: '#4ade80', emoji: '🧑' },
   { id: 'dayane',   name: 'Dayane',   pin: '1234', role: 'admin',  color: '#fb923c', emoji: '🦊', onlyDinner: true },
+  // Filhos — ordem: mais velha ao mais novo
+  { id: 'isadora',  name: 'Isadora',  pin: '1234', role: 'user',   color: '#f472b6', emoji: '👧' },
+  { id: 'arthur',   name: 'Arthur',   pin: '1234', role: 'user',   color: '#38bdf8', emoji: '👦' },
+  { id: 'icaro',    name: 'Ícaro',    pin: '1234', role: 'user',   color: '#4ade80', emoji: '👶' },
 ];
 
 // Load users from admin settings (overrides defaults)
@@ -22,7 +24,7 @@ function saveUsers(users) {
   localStorage.setItem('casaclean_users', JSON.stringify(users));
 }
 
-// ─── TASK DEADLINES (admin-configurable) ────────────────────────────────────
+// ─── TASK DEADLINES (admin-configurable) ────────────────────────────────────────────
 const DEADLINES_DEFAULT = {
   'lixo manhã':    '07:30',
   'colocar lixo':  '07:30',
@@ -65,13 +67,13 @@ function isTaskOverdue(task) {
   return now > limit;
 }
 
-// ─── TASK ICONS ───────────────────────────────────────────────────────────────
+// ─── TASK ICONS ────────────────────────────────────────────────────────────────────────────
 const TASK_ICONS = {
   'louça':         '🍽️',
   'varrer':        '🧹',
   'lixo manhã':    '🌅',
   'lixo noite':    '🌙',
-  'banheiro':      '🚿',
+  'banheiro':      '🛇',
   'quintal':       '🌿',
   'colocar lixo':  '🗑️',
   'jantar':        '🍲',
@@ -85,7 +87,7 @@ function getTaskIcon(name) {
   return '📌';
 }
 
-// ─── WEEKLY SCHEDULE (admin-editable base) ────────────────────────────────────
+// ─── WEEKLY SCHEDULE (admin-editable base) ──────────────────────────────────────────────
 const WEEKLY_SCHEDULE_DEFAULT = {
   domingo: [
     { task: 'Louça',        user: 'douglas', time: '08:00' },
@@ -166,7 +168,6 @@ function saveBaseSchedule(schedule) {
   localStorage.setItem('casaclean_base_schedule', JSON.stringify(schedule));
 }
 
-// used by storage.js
 const WEEKLY_SCHEDULE = WEEKLY_SCHEDULE_DEFAULT;
 
 function getTasksForDay(date = new Date()) {
@@ -183,7 +184,7 @@ function getInitials(name) {
   return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 }
 
-// ─── MEDALS ──────────────────────────────────────────────────────────────────
+// ─── MEDALS ───────────────────────────────────────────────────────────────────────────────
 const MEDALS_DEF = [
   { id: 'first',   icon: '🌟', name: 'Primeiro passo',  desc: 'Concluiu a primeira tarefa',         threshold: 1  },
   { id: 'clean10', icon: '💎', name: 'Dedicação',        desc: 'Concluiu 10 tarefas no total',        threshold: 10 },
