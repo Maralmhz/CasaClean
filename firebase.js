@@ -1,9 +1,9 @@
-// ─── FIREBASE CONFIG (sem Storage) ───────────────────────────────────────────────
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import {
-  getFirestore, doc, getDoc, setDoc,
-  collection, getDocs
-} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+// ─── FIREBASE CONFIG ───────────────────────────────────────────────────────────────
+// Usando Firebase v8 compat (CDN) para funcionar com scripts globais
+// sem necessidade de bundler ou type=module
+
+// Os scripts do Firebase v8 são carregados no index.html via CDN
+// e ficam disponíveis como firebase.firestore() globalmente
 
 const firebaseConfig = {
   apiKey: "AIzaSyCi2G_wS4PXiupQnBBXX8NWjojHNq40Kfc",
@@ -14,6 +14,8 @@ const firebaseConfig = {
   appId: "1:515255870782:web:f32514ae8b9baf6194386f"
 };
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export { doc, getDoc, setDoc, collection, getDocs };
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+const db = firebase.firestore();

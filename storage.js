@@ -1,5 +1,4 @@
-// ─── STORAGE.JS — Firestore (sem Firebase Storage) ───────────────────────────
-// Fotos são salvas como base64 diretamente no Firestore (plano gratuito Spark)
+// ─── STORAGE.JS — Firestore (plano gratuito, sem Firebase Storage) ────────────
 
 const STORAGE_KEYS = {
   tasks:    'casaclean_tasks',
@@ -22,23 +21,21 @@ function saveJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-// ─── FIRESTORE SYNC ────────────────────────────────────────────────────────
-async function syncToFirestore(col, docId, data) {
+// ─── FIRESTORE HELPERS ─────────────────────────────────────────────────────
+function syncToFirestore(col, docId, data) {
   try {
-    const { db, doc, setDoc } = await import('./firebase.js');
-    await setDoc(doc(db, col, docId), data, { merge: true });
+    db.collection(col).doc(docId).set(data, { merge: true });
   } catch(e) { console.warn('Firestore sync error:', e); }
 }
 
 async function loadFromFirestore(col, docId) {
   try {
-    const { db, doc, getDoc } = await import('./firebase.js');
-    const snap = await getDoc(doc(db, col, docId));
-    return snap.exists() ? snap.data() : null;
+    const snap = await db.collection(col).doc(docId).get();
+    return snap.exists ? snap.data() : null;
   } catch(e) { console.warn('Firestore load error:', e); return null; }
 }
 
-// ─── FOTO: comprime base64 e salva no Firestore ────────────────────────────
+// ─── COMPRIME FOTO E SALVA NO FIRESTORE ────────────────────────────────
 async function compressAndSavePhoto(taskId, base64DataUrl, dateISO) {
   return new Promise((resolve) => {
     const img = new Image();
@@ -50,7 +47,6 @@ async function compressAndSavePhoto(taskId, base64DataUrl, dateISO) {
       canvas.height = img.height * ratio;
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
       const compressed = canvas.toDataURL('image/jpeg', 0.5);
-      // Salva foto separadamente no Firestore
       syncToFirestore('photos', `${dateISO}-${taskId}`, { photo: compressed, taskId, date: dateISO });
       resolve(compressed);
     };
@@ -80,11 +76,10 @@ function getDailyTasks(dateISO = todayISO()) {
 
 function saveDailyTasks(tasks, dateISO = todayISO()) {
   const stored = loadJSON(STORAGE_KEYS.tasks, {});
-  // Não salva base64 no documento principal de tarefas (evita documento grande)
-  const tasksClean = tasks.map(t => ({ ...t, proofUrl: t.proofUrl?.startsWith('data:') ? '[foto-local]' : t.proofUrl }));
-  stored[dateISO] = tasks; // local com base64
+  stored[dateISO] = tasks;
   saveJSON(STORAGE_KEYS.tasks, stored);
-  syncToFirestore('tasks', dateISO, { tasks: tasksClean }); // Firestore sem base64 pesado
+  const tasksClean = tasks.map(t => ({ ...t, proofUrl: t.proofUrl?.startsWith('data:') ? '[foto-local]' : (t.proofUrl || null) }));
+  syncToFirestore('tasks', dateISO, { tasks: tasksClean });
 }
 
 function initDailyTasks(date = new Date()) {
@@ -119,7 +114,6 @@ async function completeTask(taskId, proofBase64, dateISO = todayISO()) {
   const task = tasks.find(t => t.id === taskId);
   if (!task) return false;
 
-  // Comprime foto e salva no Firestore como doc separado
   const proofUrl = await compressAndSavePhoto(taskId, proofBase64, dateISO);
 
   task.status      = 'done';
@@ -152,8 +146,7 @@ function addToHistory(task, dateISO) {
   const history = loadJSON(STORAGE_KEYS.history, []);
   history.push({ ...task, date: dateISO });
   saveJSON(STORAGE_KEYS.history, history);
-  // Salva no histórico sem base64
-  const taskClean = { ...task, date: dateISO, proofUrl: task.proofUrl?.startsWith('data:') ? '[foto-local]' : task.proofUrl };
+  const taskClean = { ...task, date: dateISO, proofUrl: task.proofUrl?.startsWith('data:') ? '[foto-local]' : (task.proofUrl || null) };
   syncToFirestore('history', `${dateISO}-${task.id}`, taskClean);
 }
 
@@ -189,27 +182,29 @@ function saveDeadlines(deadlines) {
   syncToFirestore('config', 'deadlines', deadlines);
 }
 
-// ─── HYDRATE DO FIRESTORE NA INICIALIZAÇÃO ─────────────────────────────────
+// ─── HYDRATE DO FIRESTORE ────────────────────────────────────────────────────
 async function hydrateFromFirestore() {
   try {
-    const usersDoc = await loadFromFirestore('config', 'users');
-    if (usersDoc?.users) {
-      localStorage.setItem('casaclean_users', JSON.stringify(usersDoc.users));
-      USERS = usersDoc.users;
+    const usersSnap = await db.collection('config').doc('users').get();
+    if (usersSnap.exists && usersSnap.data()?.users) {
+      const users = usersSnap.data().users;
+      localStorage.setItem('casaclean_users', JSON.stringify(users));
+      USERS = users;
     }
 
-    const dlDoc = await loadFromFirestore('config', 'deadlines');
-    if (dlDoc) localStorage.setItem('casaclean_deadlines', JSON.stringify(dlDoc));
+    const dlSnap = await db.collection('config').doc('deadlines').get();
+    if (dlSnap.exists) {
+      localStorage.setItem('casaclean_deadlines', JSON.stringify(dlSnap.data()));
+    }
 
-    const todayDoc = await loadFromFirestore('tasks', todayISO());
-    if (todayDoc?.tasks) {
+    const todaySnap = await db.collection('tasks').doc(todayISO()).get();
+    if (todaySnap.exists && todaySnap.data()?.tasks) {
       const stored = loadJSON(STORAGE_KEYS.tasks, {});
-      stored[todayISO()] = todayDoc.tasks;
+      stored[todayISO()] = todaySnap.data().tasks;
       saveJSON(STORAGE_KEYS.tasks, stored);
     }
 
-    const { db, collection, getDocs } = await import('./firebase.js');
-    const histSnap = await getDocs(collection(db, 'history'));
+    const histSnap = await db.collection('history').get();
     if (!histSnap.empty) {
       const history = [];
       histSnap.forEach(d => history.push(d.data()));
@@ -217,8 +212,8 @@ async function hydrateFromFirestore() {
       saveJSON(STORAGE_KEYS.history, history);
     }
 
-    const schedDoc = await loadFromFirestore('schedule', 'custom');
-    if (schedDoc) saveJSON(STORAGE_KEYS.schedule, schedDoc);
+    const schedSnap = await db.collection('schedule').doc('custom').get();
+    if (schedSnap.exists) saveJSON(STORAGE_KEYS.schedule, schedSnap.data());
 
     console.log('✅ Firebase hydration completa');
   } catch(e) {
@@ -232,6 +227,3 @@ function clearTodayData_storage() {
   delete stored[todayISO()];
   saveJSON(STORAGE_KEYS.tasks, stored);
 }
-
-window.hydrateFromFirestore = hydrateFromFirestore;
-window.completeTask = completeTask;

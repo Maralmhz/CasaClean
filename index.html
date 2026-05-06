@@ -232,8 +232,15 @@
   </div>
 
 </div>
-<script type="module" src="data.js"></script>
-<script type="module" src="storage.js"></script>
-<script type="module" src="app.js"></script>
+
+<!-- Firebase v8 compat (CDN) - funciona com scripts globais sem bundler -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<!-- App -->
+<script src="data.js"></script>
+<script src="firebase.js"></script>
+<script src="storage.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
