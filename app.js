@@ -1,4 +1,4 @@
-// ─── STATE ───────────────────────────────────────────────────────────────────
+// ─── STATE ────────────────────────────────────────────────────────────────────────────
 let currentUser   = null;
 let pinTarget     = null;
 let pinBuffer     = '';
@@ -6,8 +6,11 @@ let filterMode    = 'all';
 let currentScreen = 'home';
 let pendingPhotos = {};
 
-// ─── INIT ────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+// ─── INIT ────────────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  // Busca dados do Firestore primeiro, depois inicializa o app
+  await hydrateFromFirestore();
+
   USERS = getUsers();
   buildUserGrid();
   bindNavigation();
@@ -21,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// ─── USER GRID ───────────────────────────────────────────────────────────────
+// ─── USER GRID ────────────────────────────────────────────────────────────────────
 function buildUserGrid() {
   const grid = document.getElementById('userGrid');
   grid.innerHTML = '';
@@ -38,7 +41,7 @@ function buildUserGrid() {
   });
 }
 
-// ─── PIN MODAL ───────────────────────────────────────────────────────────────
+// ─── PIN MODAL ───────────────────────────────────────────────────────────────────
 function openPinModal(user) {
   pinTarget = user;
   pinBuffer = '';
@@ -87,7 +90,7 @@ function validatePin() {
   }
 }
 
-// ─── APP ENTRY ───────────────────────────────────────────────────────────────
+// ─── APP ENTRY ─────────────────────────────────────────────────────────────────────
 function enterApp() {
   updateUserBadges();
   navigateTo('home');
@@ -125,7 +128,7 @@ function updateUserBadges() {
   });
 }
 
-// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+// ─── NAVIGATION ────────────────────────────────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -146,7 +149,7 @@ function bindNavigation() {
   });
 }
 
-// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────────
 function renderDashboard() {
   const date    = new Date();
   const dateISO = date.toISOString().slice(0, 10);
@@ -241,7 +244,7 @@ function toggleFilter() {
   renderDashboard();
 }
 
-// ─── PHOTO & COMPLETE ────────────────────────────────────────────────────────
+// ─── PHOTO & COMPLETE ───────────────────────────────────────────────────────────────
 function handlePhotoSelect(event, taskId, dateISO) {
   const file = event.target.files[0];
   if (!file) return;
@@ -258,10 +261,10 @@ function handlePhotoSelect(event, taskId, dateISO) {
   reader.readAsDataURL(file);
 }
 
-function handleComplete(taskId, dateISO) {
+async function handleComplete(taskId, dateISO) {
   const proof = pendingPhotos[taskId];
   if (!proof) { showToast('Selecione uma foto antes de concluir!', 'error'); return; }
-  const ok = completeTask(taskId, proof, dateISO);
+  const ok = await completeTask(taskId, proof, dateISO);
   if (ok) {
     delete pendingPhotos[taskId];
     showToast('Tarefa concluída! 🎉', 'success');
@@ -271,7 +274,7 @@ function handleComplete(taskId, dateISO) {
   }
 }
 
-// ─── HISTORY ─────────────────────────────────────────────────────────────────
+// ─── HISTORY ──────────────────────────────────────────────────────────────────
 function renderHistory() {
   const list    = document.getElementById('historyList');
   const history = getHistory().slice().reverse();
@@ -296,7 +299,7 @@ function renderHistory() {
       const hi = document.createElement('div');
       hi.className = 'history-item';
       hi.innerHTML = `
-        ${h.proofUrl
+        ${h.proofUrl && h.proofUrl !== '[foto-local]'
           ? `<img src="${h.proofUrl}" class="hi-thumb" alt="foto">`
           : `<div class="hi-thumb" style="background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px">${getTaskIcon(h.task)}</div>`}
         <div class="hi-info">
@@ -311,7 +314,7 @@ function renderHistory() {
   });
 }
 
-// ─── MEDALS ──────────────────────────────────────────────────────────────────
+// ─── MEDALS ────────────────────────────────────────────────────────────────────
 function renderMedals() {
   renderRanking();
   renderMedalsList();
@@ -374,7 +377,7 @@ function bindMedalTabs() {
   });
 }
 
-// ─── CONFIG TABS ─────────────────────────────────────────────────────────────
+// ─── CONFIG TABS ───────────────────────────────────────────────────────────────────
 function bindConfigTabs() {
   const tabBar = document.querySelector('#screen-config .tab-bar');
   if (!tabBar) return;
@@ -418,7 +421,7 @@ function bindForms() {
   }
 }
 
-// ─── ADMIN: USERS & PINs ─────────────────────────────────────────────────────
+// ─── ADMIN: USERS & PINs ────────────────────────────────────────────────────────────
 function renderUsersAdmin() {
   const container = document.getElementById('usersAdminList');
   if (!container) return;
@@ -465,7 +468,7 @@ function saveUserPin(userId) {
   if (input) input.value = '';
 }
 
-// ─── ADMIN: DEADLINES ────────────────────────────────────────────────────────
+// ─── ADMIN: DEADLINES ────────────────────────────────────────────────────────────
 function renderDeadlinesAdmin() {
   const container = document.getElementById('deadlinesAdminList');
   if (!container) return;
@@ -514,7 +517,7 @@ function saveDeadlinesAdmin() {
   showToast('Prazos salvos! ✅', 'success');
 }
 
-// ─── SCHEDULE VIEW ───────────────────────────────────────────────────────────
+// ─── SCHEDULE VIEW ──────────────────────────────────────────────────────────────────
 function renderScheduleView() {
   const container = document.getElementById('scheduleViewList');
   if (!container) return;
@@ -554,7 +557,7 @@ function renderAdminPanel() {
   }
 }
 
-// ─── TOAST ───────────────────────────────────────────────────────────────────
+// ─── TOAST ────────────────────────────────────────────────────────────────────
 function showToast(msg, type = 'info') {
   const container = document.getElementById('toastContainer');
   const icons = { success: '✅', error: '❌', info: 'ℹ️' };
@@ -565,7 +568,7 @@ function showToast(msg, type = 'info') {
   setTimeout(() => toast.remove(), 3200);
 }
 
-// ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────────────────
 function requestNotificationPermission() {
   if (!('Notification' in window)) { showToast('Notificações não suportadas', 'error'); return; }
   Notification.requestPermission().then(p => {
@@ -591,7 +594,7 @@ function scheduleNotifications() {
   });
 }
 
-// ─── DEBUG ───────────────────────────────────────────────────────────────────
+// ─── DEBUG ────────────────────────────────────────────────────────────────────
 function clearTodayData() {
   if (!confirm('Limpar dados de hoje? (debug)')) return;
   clearTodayData_storage();
