@@ -4,7 +4,7 @@ const USERS_DEFAULT = [
   { id: 'isadora',  name: 'Isadora',  pin: '1234', role: 'user',   color: '#f472b6', emoji: '👩‍🍳' },
   { id: 'arthur',   name: 'Arthur',   pin: '1234', role: 'user',   color: '#38bdf8', emoji: '👦' },
   { id: 'icaro',    name: 'Ícaro',    pin: '1234', role: 'user',   color: '#4ade80', emoji: '🧑' },
-  { id: 'id: 'dayane',  name: 'Dayane',  pin: '1234', role: 'admin', color: '#fb923c', emoji: '🦊', onlyDinner: true },
+  { id: 'dayane',   name: 'Dayane',   pin: '1234', role: 'admin',  color: '#fb923c', emoji: '🦊', onlyDinner: true },
 ];
 
 // Load users from admin settings (overrides defaults)
