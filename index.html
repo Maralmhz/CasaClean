@@ -5,12 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>CasaClean</title>
   <meta name="description" content="App de tarefas domésticas com escala semanal, checklist e histórico">
-  <meta name="theme-color" content="#0f0f13">
+  <meta name="theme-color" content="#f4f4f8">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script>
+    // Aplica tema salvo antes do render para evitar flash
+    (function() {
+      const t = localStorage.getItem('cc-theme');
+      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
 </head>
 <body>
 <div id="app">
@@ -68,6 +75,7 @@
           <div class="av" id="currentUserAv"></div>
           <span id="currentUserName">—</span>
         </div>
+        <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Alternar tema">🌙</button>
         <button class="icon-btn" onclick="requestNotificationPermission()" title="Notificações">🔔</button>
       </div>
     </div>
@@ -122,6 +130,7 @@
           <div class="av" id="histUserAv"></div>
           <span id="histUserName">—</span>
         </div>
+        <button class="icon-btn" onclick="toggleTheme()" title="Alternar tema">🌙</button>
       </div>
     </div>
     <div class="main-content">
@@ -145,6 +154,7 @@
           <div class="av" id="medUserAv"></div>
           <span id="medUserName">—</span>
         </div>
+        <button class="icon-btn" onclick="toggleTheme()" title="Alternar tema">🌙</button>
       </div>
     </div>
     <div class="main-content">
@@ -173,6 +183,7 @@
           <div class="av" id="cfgUserAv"></div>
           <span id="cfgUserName">—</span>
         </div>
+        <button class="icon-btn" onclick="toggleTheme()" title="Alternar tema">🌙</button>
       </div>
     </div>
     <div class="main-content">
@@ -233,9 +244,35 @@
 
 </div>
 
-<!-- Firebase v8 compat (CDN) - funciona com scripts globais sem bundler -->
+<!-- Firebase v8 compat (CDN) -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<!-- Theme toggle -->
+<script>
+  function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('cc-theme', 'light');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('cc-theme', 'dark');
+    }
+    syncThemeButtons();
+  }
+
+  function syncThemeButtons() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.icon-btn[onclick="toggleTheme()"]').forEach(btn => {
+      btn.textContent = isDark ? '☀️' : '🌙';
+      btn.title = isDark ? 'Modo claro' : 'Modo escuro';
+    });
+  }
+
+  // Sincroniza ícones após DOM estar pronto
+  document.addEventListener('DOMContentLoaded', syncThemeButtons);
+</script>
 
 <!-- App -->
 <script src="data.js"></script>
