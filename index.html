@@ -5,12 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>CasaClean</title>
   <meta name="description" content="App de tarefas domésticas com escala semanal, checklist e histórico">
-  <meta name="theme-color" content="#f4f4f8">
-  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#6c63ff">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- iOS (iPhone/iPad) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="CasaClean">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+
   <script>
     (function() {
       const t = localStorage.getItem('cc-theme');
@@ -61,9 +75,8 @@
   <!-- LOGIN -->
   <div class="screen active" id="screen-login">
     <div class="login-hero">
-      <div class="login-icon">🏠</div>
-      <h1>CasaClean</h1>
-      <p>Organize as tarefas da casa de forma simples e eficiente</p>
+      <img src="/logo.jpg" alt="CasaClean" class="login-logo">
+      <p>Família Oliveira Amaral</p>
     </div>
     <div class="user-grid" id="userGrid"></div>
   </div>
@@ -72,8 +85,7 @@
   <div class="screen" id="screen-home">
     <div class="topbar">
       <div class="topbar-logo">
-        <span class="logo-icon">🏠</span>
-        <span class="logo-text">CasaClean</span>
+        <img src="/logo.jpg" alt="CasaClean" class="topbar-logo-img">
       </div>
       <div class="topbar-actions">
         <div class="avatar-pill" id="currentUserPill" onclick="logout()">
@@ -129,7 +141,7 @@
   <!-- HISTORY -->
   <div class="screen" id="screen-history">
     <div class="topbar">
-      <div class="topbar-logo"><span class="logo-icon">🏠</span><span class="logo-text">CasaClean</span></div>
+      <div class="topbar-logo"><img src="/logo.jpg" alt="CasaClean" class="topbar-logo-img"></div>
       <div class="topbar-actions">
         <div class="avatar-pill" id="histUserPill" onclick="logout()">
           <div class="av" id="histUserAv"></div>
@@ -153,7 +165,7 @@
   <!-- MEDALS -->
   <div class="screen" id="screen-medals">
     <div class="topbar">
-      <div class="topbar-logo"><span class="logo-icon">🏠</span><span class="logo-text">CasaClean</span></div>
+      <div class="topbar-logo"><img src="/logo.jpg" alt="CasaClean" class="topbar-logo-img"></div>
       <div class="topbar-actions">
         <div class="avatar-pill" id="medUserPill" onclick="logout()">
           <div class="av" id="medUserAv"></div>
@@ -163,7 +175,7 @@
       </div>
     </div>
     <div class="main-content">
-      <div class="section-head"><div><h2>Medalhas & Ranking</h2><p>Performance da casa</p></div></div>
+      <div class="section-head"><div><h2>Medalhas &amp; Ranking</h2><p>Performance da casa</p></div></div>
       <div class="tab-bar">
         <button class="tab active" data-tab="ranking">🏆 Ranking</button>
         <button class="tab" data-tab="medals">🎖 Conquistas</button>
@@ -182,7 +194,7 @@
   <!-- CONFIG -->
   <div class="screen" id="screen-config">
     <div class="topbar">
-      <div class="topbar-logo"><span class="logo-icon">🏠</span><span class="logo-text">CasaClean</span></div>
+      <div class="topbar-logo"><img src="/logo.jpg" alt="CasaClean" class="topbar-logo-img"></div>
       <div class="topbar-actions">
         <div class="avatar-pill" id="cfgUserPill" onclick="logout()">
           <div class="av" id="cfgUserAv"></div>
